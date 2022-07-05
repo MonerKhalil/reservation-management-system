@@ -24,5 +24,10 @@ Route::get('/', function () {
 //appkey
 //base64:kequEmX+yBaL1/xS2kCRne14plUQwYaGgM37QxknwIs=
 //id19072468_db_projectfinal
-//id19072468_monerkhalil      ,,,,,monerkhalil
+//id19072468_monerkhalil      ,,,,,monerkhalil///password in infinty
 //_03h2v3CPP)j0?I~
+
+
+//username epiz_32106503!
+//password id19072468_monerkhalil
+//db name : epiz_32106503_db_projectfinal
