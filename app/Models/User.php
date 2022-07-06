@@ -56,6 +56,10 @@ class User extends Authenticatable
     {
         return $this->hasMany(bookings::class,"id_user","id");
     }
+    public function favorites(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(favorites::class,"id_user","id");
+    }
 
     public function reviews(): \Illuminate\Database\Eloquent\Relations\HasMany
     {

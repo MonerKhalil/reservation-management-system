@@ -13,4 +13,12 @@ class favorites extends Model
         "id_facility","id_user"
     ];
     public $timestamps = false;
+    public function facilities_favorites(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(facilities::class,"id_facility","id")->withDefault();
+    }
+    public function users_favorites(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(User::class,"id_user","id")->withDefault();
+    }
 }

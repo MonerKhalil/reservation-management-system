@@ -14,6 +14,7 @@ class facilities extends Model
         "type","cost","rate","num_guest","num_room"
         ,"wifi","coffee_machine","air_condition","tv","fridge"
     ];
+    protected $hidden = ["pivot"];
 
     public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
@@ -28,6 +29,10 @@ class facilities extends Model
     public function bookings(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(bookings::class,"id_facility","id");
+    }
+    public function favorites(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(favorites::class,"id_facility","id");
     }
 
     public function reviews(): \Illuminate\Database\Eloquent\Relations\HasMany

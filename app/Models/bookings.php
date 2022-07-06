@@ -17,7 +17,7 @@ class bookings extends Model
         "start_date"=>"date",
         "end_date"=>"date"
     ];
-    protected $hidden=["updated_at"];
+    protected $hidden=["updated_at","state"];
 
     //datetime
     //YYYY-MM-DD HH:MM:SS
