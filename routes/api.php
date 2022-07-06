@@ -4,7 +4,8 @@ use Illuminate\Http\Request;
 
 
 //
-Route::get("test",function (Request $request){
+Route::match(["get","post","delete"],"test",function (Request $request){
+    return $request->method();
 ////    $request->start_date,$request->end_date
 ////    $start_date = new DateTime($request->start_date);
 ////    $end_date = new DateTime($request->end_date);
@@ -28,6 +29,8 @@ require __DIR__ . "\\Route.Private.Project\\"."User\\"."authuser.php";
 require __DIR__ . "\\Route.Private.Project\\"."User\\"."user.php";
 
 require __DIR__ . "\\Route.Private.Project\\"."User\\"."status.php";
+
+require __DIR__ . "\\Route.Private.Project\\"."User\\"."notifications.php";
 
 require __DIR__ . "\\Route.Private.Project\\"."Admin\\"."admin.php";
 
