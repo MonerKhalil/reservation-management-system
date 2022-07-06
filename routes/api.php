@@ -2,7 +2,6 @@
 use Illuminate\Http\Request;
 
 
-Route::get("test1",[\App\Http\Controllers\Api\facilities\SearchController::class,"Date"]);
 
 //
 Route::get("test",function (Request $request){
