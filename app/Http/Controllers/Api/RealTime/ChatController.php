@@ -63,7 +63,7 @@ class ChatController extends Controller
                "id_recipient"=>$request->id_recipient,
                "message" => $request->message,
             ]);
-//            broadcast(new ChatEvent($message));
+            broadcast(new ChatEvent($message));
             DB::commit();
             return response()->json([
                 "id_message"=> $message->id,

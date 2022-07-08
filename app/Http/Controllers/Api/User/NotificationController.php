@@ -56,7 +56,6 @@ class NotificationController extends Controller
             return \response()->json([
                 "Error" => $exception->getMessage()
             ],401);
-
         }
     }
 
