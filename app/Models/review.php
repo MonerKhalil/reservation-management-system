@@ -10,7 +10,7 @@ class review extends Model
     use HasFactory;
     protected $table = "reviews";
     protected $fillable =[
-        "id_facility"."id_user","comment","rate"
+        "id_facility","id_user","comment","rate"
     ];
     public function facilities_reviews(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {

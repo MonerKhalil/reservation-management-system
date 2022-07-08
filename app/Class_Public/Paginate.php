@@ -22,12 +22,12 @@ trait Paginate
     public function NumberOfValues(Request $request): int
     {
         try {
-            if($request->has("num_values")&&$request->num_values>0){
+            if($request->has("num_values")&&is_numeric($request->num_values)&&$request->num_values>0){
                 return $request->num_values;
             }
             throw new \Exception("");
         }catch (\Exception $exception){
-            return 5;
+            return 10;
         }
     }
     public function Check_Date($datestr,$dateend): bool

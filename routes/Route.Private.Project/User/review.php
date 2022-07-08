@@ -5,6 +5,7 @@ use \App\Http\Controllers\Api\User\ReviewController;
 
 
 Route::controller(ReviewController::class)->prefix("user")->group(function (){
-    Route::post("rate","Online");
-    Route::post("comment","Offline");
+    Route::get("show","ShowReviewAll");
+    Route::post("rate","CreateReviewRating");
+    Route::post("comment","CreateReviewComment");
 });

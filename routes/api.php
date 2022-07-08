@@ -32,6 +32,8 @@ require __DIR__ . "\\Route.Private.Project\\"."User\\"."status.php";
 
 require __DIR__ . "\\Route.Private.Project\\"."User\\"."notifications.php";
 
+require __DIR__ . "\\Route.Private.Project\\"."User\\"."review.php";
+
 require __DIR__ . "\\Route.Private.Project\\"."Admin\\"."admin.php";
 
 ############### End Users ######################
