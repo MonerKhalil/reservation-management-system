@@ -2,7 +2,7 @@
 use Illuminate\Http\Request;
 
 
-
+Broadcast::routes(['middleware' => ['auth:userapi']]);
 //
 Route::match(["get","post","delete"],"test",function (Request $request){
     return $request->method();
