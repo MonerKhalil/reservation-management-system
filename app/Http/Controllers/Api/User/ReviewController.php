@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Api\User;
 use App\Class_Public\Paginate;
 use App\Http\Controllers\Controller;
 use App\Models\facilities;
+use App\Models\Profile;
 use App\Models\review;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -34,10 +36,16 @@ class ReviewController extends Controller
                     "Error" => $validate->errors()
                 ],401);
             }
-            $reviews = review::where("id_facility",$request->id_facility)->orderBy("id")->paginate($this->NumberOfValues($request));
+            $reviews = review::where("reviews.id_facility",$request->id_facility)
+                ->orderBy("reviews.id")
+                ->paginate($this->NumberOfValues($request));
             $reviews = $this->Paginate("reviews",$reviews);
+
             foreach ($reviews["reviews"] as $item){
-//                $item->user =
+                $item->user = [
+                    "name"=>User::where("users.id",$item->id_user)->first()->name,
+                    "path_photo"=>Profile::where("id_user",$item->id_user)->first()->path_photo
+                    ];
             }
             return \response()->json($reviews);
         }catch (\Exception $exception){
