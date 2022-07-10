@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\User;
 
 use App\Class_Public\Paginate;
+use App\Events\CommentEvent;
 use App\Http\Controllers\Controller;
 use App\Models\facilities;
 use App\Models\Profile;
@@ -108,16 +109,19 @@ class ReviewController extends Controller
                     "Error" => $validate->errors()
                 ],401);
             }
-            $review = auth()->user()->reviews()->where("id_facility",$request->id_facility)->first();
+            $review = $user->reviews()->where("id_facility",$request->id_facility)->first();
             if(!is_null($review)){
-                $review = review::updateOrCreate([
+                $review = review::update([
                     "id_facility"=>$request->id_facility,
                     "id_user"=>$user->id
                 ],[
                     "comment"=>$request->comment
                 ]);
-                $this->UpdateRateFacility($request->id_facility);
                 DB::commit();
+                $profile = new class{};
+                $profile->name = $user->name;
+                $profile->path_photo = $user->profile()->path_photo;
+                broadcast(new CommentEvent($profile,$review));
                 return \response()->json([
                     "review" => $review
                 ]);

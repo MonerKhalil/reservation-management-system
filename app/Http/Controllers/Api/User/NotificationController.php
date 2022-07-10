@@ -64,7 +64,7 @@ class NotificationController extends Controller
         return $this->Paginate("Notifications",$notifications);
     }
     public function GetNotificationUnRead($request,$user):array{
-        $notifications = $user->unreadNotifications()->paginate($this->NumberOfValues($request));
+        $notifications = $user->unreadNotifications()->select("data")->paginate($this->NumberOfValues($request));
         return $this->Paginate("Notifications",$notifications);
     }
     public function GetNotificationAll($request,$user):array{

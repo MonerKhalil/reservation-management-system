@@ -1,26 +1,13 @@
 <?php
-use Illuminate\Http\Request;
-
 
 Broadcast::routes(['middleware' => ['auth:userapi']]);
+
+
+
+//TEST
+Route::match(["get", "post", "delete"],
+    "test",[\App\Http\Controllers\Api\facilities\ProposalsController::class,"Proposals"]);
 //
-Route::match(["get","post","delete"],"test",function (Request $request){
-    return $request->method();
-////    $request->start_date,$request->end_date
-////    $start_date = new DateTime($request->start_date);
-////    $end_date = new DateTime($request->end_date);
-////    return round(abs(strtotime($request->end_date) - strtotime($request->start_date))/86400);
-//
-//    try {
-//        Throw new Exception("ksdmsdkmsdkmdskkdsm");
-//    }catch (Exception $exception){
-//        return \response()->json([
-//            "Error" => $exception->getMessage()
-//        ], 401);
-//    }
-//
-////    return response()->json([ $end_date->diff($start_date)->days ]);
-});
 
 ############### Start Users ######################
 
@@ -33,6 +20,8 @@ require __DIR__ . "\\Route.Private.Project\\"."User\\"."status.php";
 require __DIR__ . "\\Route.Private.Project\\"."User\\"."notifications.php";
 
 require __DIR__ . "\\Route.Private.Project\\"."User\\"."review.php";
+
+require __DIR__ . "\\Route.Private.Project\\"."User\\"."proposals.php";
 
 require __DIR__ . "\\Route.Private.Project\\"."Admin\\"."admin.php";
 

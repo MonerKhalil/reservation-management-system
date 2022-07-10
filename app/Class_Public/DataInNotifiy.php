@@ -11,7 +11,12 @@ class DataInNotifiy
         $this->type = $type;
         $this->url = $url;
     }
-    public function GetAllData():DataInNotifiy{
-        return $this;
+    public function GetAllData(): array
+    {
+        return [
+            "url"=>$this->url,
+            "type"=>$this->type,
+            "body"=>$this->body
+        ];
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Class_Public\DataInNotifiy;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -13,18 +14,21 @@ class UserNotification extends Notification implements ShouldBroadcast
 {
     use Queueable;
 
-    public $header,$body,$created_at;
-
+    public $header,$body,$type,$created_at,$data;
+    public $temp;
     /**
      * Create a new notification instance.
      *
      * @return void
      */
-    public function __construct($header,$body,$created_at)
+    public function __construct($header,$type,$body,$created_at,DataInNotifiy $data = null)
     {
         $this->header = $header;
+        $this->type = $type;
         $this->body = $body;
         $this->created_at = $created_at;
+        $this->data = $data;
+        $this->temp = is_null($this->data) ? []:$this->data->GetAllData();
     }
 
     /**
@@ -61,18 +65,22 @@ class UserNotification extends Notification implements ShouldBroadcast
     public function toArray($notifiable):array
     {
         return [
+            "Notify_type" => $this->type,
             "header"=>$this->header,
             "body" => $this->body,
-            "created_at" => $this->created_at
+            "created_at" => $this->created_at,
+            "data" => $this->temp
         ];
     }
 
     public function toBroadcast($notifiable): BroadcastMessage
     {
         return new BroadcastMessage([
+            "Notify_type" => $this->type,
             "header"=>$this->header,
             "body" => $this->body,
-            "created_at" => $this->created_at
+            "created_at" => $this->created_at,
+            "request_next" => $this->temp
         ]);
     }
     //name Event : Illuminate\Notifications\Events\BroadcastNotificationCreated

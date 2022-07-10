@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Broadcast;
 
+############ Start Chats ############
 Broadcast::channel('Room.Chat.{id}', function ($user, $id) {
     return (int) $user->id === (int) $id;
 });
@@ -9,10 +10,15 @@ Broadcast::channel('Room.Chat.{id}', function ($user, $id) {
 Broadcast::channel('Read.Messages.{id}', function ($user, $id) {
     return (int) $user->id === (int) $id;
 });
+############ End Chats ############
 
+//Comments
 
+Broadcast::channel('User.Comment.Facility.{id}', function () {
+    return true;
+});
 
-//Notification
+//Notifications
 Broadcast::channel('User.Notify.{id}', function ($user, $id) {
     return (int) $user->id === (int) $id;
 });

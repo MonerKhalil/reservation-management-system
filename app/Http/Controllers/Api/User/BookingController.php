@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\User;
 
+use App\Class_Public\DataInNotifiy;
 use App\Class_Public\Paginate;
 use App\Http\Controllers\Controller;
 use App\Models\bookings;
@@ -110,11 +111,11 @@ class BookingController extends Controller
                 $user->increment("amount",$booking->cost);
                 $booking->delete();
                 DB::commit();
-                $header = "Cancellation of a facility reservation ".$facility->name;
-                $body = "The reservation has been canceled by the user ".$user->name;
-                $owner->notify(new UserNotification($header,$body,Carbon::now()));
-
-                return \response()->json(["Success"=>"Done UnBooking The Facility :)"]);
+                $header = "unbooking facility ".$facility->name;
+                $body = "This property has already been cancelled ".$user->name;
+                $owner->notify(new UserNotification($header,"UnBooking",$body,Carbon::now()));
+                $user->notify(new UserNotification($header,"UnBooking", "Success UnBooking The Facility :)",Carbon::now()));
+                return \response()->json(["message"=>"Success UnBooking The Facility :)"]);
             }
         }catch (\Exception $exception){
             DB::rollBack();
@@ -167,7 +168,12 @@ class BookingController extends Controller
                     DB::commit();
                     $header = "booking facility ".$facility->name;
                     $body = "The facility has been booked by the user ".$user->name;
-                    $owner->notify(new UserNotification($header,$body,$booking->created_at));
+                    $body_request = ["id_booking"=>$booking->id];
+                    $Data = new DataInNotifiy("/api/bookings/info",$body_request,"GET");
+                    $owner->notify(new UserNotification($header,"Booking",$body,$booking->created_at,$Data
+                    ));
+                    $user->notify(new UserNotification($header,"Booking",
+                        "The property has been booked successfully",$booking->created_at, $Data));
                     return \response()->json(["booking"=>$booking]);
                 }else{
                     DB::rollBack();
@@ -189,12 +195,31 @@ class BookingController extends Controller
         }
     }
 
+    public function GetInfoBooking(Request $request): \Illuminate\Http\JsonResponse
+    {
+        try {
+            $validate = Validator::make($request->all(), [
+                "id_booking" =>["required", Rule::exists("bookings", "id"), "numeric"]]);
+            if($validate->fails()){
+                return response()->json(["Error"=>$validate->errors()]);
+            }
+            $bk=bookings::where("id",$request->id_booking)->first();
+            return \response()->json([
+                "booking" => $bk
+                ]);
+        }
+        catch (\Exception $exception){
+                return \response()->json([
+                    "Error" => $exception->getMessage()
+                ], 401);
+            }
+    }
+
     private function CheckBooking($facility,$start_date,$end_date):bool{
         $bookings_facility = DB::table("bookings")->where("id_facility",$facility->id);
         $count = $bookings_facility->count();
         $test1 = clone $bookings_facility;
         if($test1->get()->toArray()===[]){
-            echo "Test1";
             return true;
         }
         $test2 = clone $bookings_facility;
@@ -208,7 +233,6 @@ class BookingController extends Controller
             ->get()->toArray();
         if ($GetBookings!==[]&&$count===count($GetBookings))
         {
-            echo "Test2";
             return true;
         }
         return false;

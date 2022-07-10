@@ -36,7 +36,6 @@ class FacilitiesController extends Controller{
             //  $facility=facilities::with('photos')->get();
             // $facility=$facility->where('user_id',Auth::id());
             $facility=Auth::user()->user_facilities()->with('photos')->get();
-
             return response([
                 'Data'=>$facility
             ]);
