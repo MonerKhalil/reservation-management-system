@@ -17,18 +17,34 @@ class ProposalsController extends Controller
         $this->middleware(["auth:userapi","multi.auth:0"]);
     }
 
+    private function WithPhotos($final_data){
+        foreach ($final_data as $item){
+            $item->photos = DB::table("photos_facility")
+                ->select(["photos_facility.*"])
+                ->where("photos_facility.id_facility",$item->id)
+                ->get();
+        }
+    }
+    
+    public function MostBooked(): \Illuminate\Support\Collection
+    {
+        $Facilities = DB::table("bookings")
+            ->selectRaw('COUNT(bookings.id_facility) as NumBooking,facilities.*')
+            ->leftJoin('facilities','facilities.id','=','bookings.id_facility')
+            ->groupBy(["bookings.id_facility"])
+            ->orderByDesc("NumBooking")
+            ->take(100)
+            ->get();
+        $this->WithPhotos($Facilities);
+        return $Facilities;
+    }
     public function Proposals(Request $request): \Illuminate\Http\JsonResponse
     {
         $FacilitiesAlike = facilities::whereIn("id",$this->GetIdsFacilitiesAlike())
              ->orderBy("rate","desc")
              ->paginate($this->NumberOfValues($request));
         $FinalAllData = $this->Paginate("facilities",$FacilitiesAlike);
-        foreach ($FinalAllData["facilities"] as $item){
-            $item->photos = DB::table("photos_facility")
-                ->select(["photos_facility.path_photo"])
-                ->where("photos_facility.id_facility",$item->id)
-                ->get();
-        }
+        $this->WithPhotos($FinalAllData["facilities"]);
         return response()->json($FinalAllData);
     }
 
@@ -48,7 +64,6 @@ class ProposalsController extends Controller
         foreach ($ids_users_temp as $item){
             $ids_users []= $item["id_user"];
         }
-
         return bookings::select("id_facility")
             ->whereIn("id_user",$ids_users)->whereNotIn("id_facility",$ids_facilities)
             ->distinct()->get()->toArray();//id_facility : values

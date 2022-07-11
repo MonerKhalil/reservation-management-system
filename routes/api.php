@@ -6,7 +6,7 @@ Broadcast::routes(['middleware' => ['auth:userapi']]);
 
 //TEST
 Route::match(["get", "post", "delete"],
-    "test",[\App\Http\Controllers\Api\facilities\ProposalsController::class,"Proposals"]);
+    "test",[\App\Http\Controllers\Api\facilities\ProposalsController::class,"MostBooked"]);
 //
 
 ############### Start Users ######################
