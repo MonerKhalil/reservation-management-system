@@ -14,7 +14,7 @@ class ProposalsController extends Controller
     use Paginate;
     public function __construct()
     {
-        $this->middleware(["auth:userapi","multi.auth:0"]);
+        $this->middleware(["auth:userapi","multi.auth:0"])->only("Proposals");
     }
 
     private function WithPhotos($final_data){
@@ -25,7 +25,7 @@ class ProposalsController extends Controller
                 ->get();
         }
     }
-    
+
     public function MostBooked(): \Illuminate\Support\Collection
     {
         $Facilities = DB::table("bookings")
@@ -48,7 +48,7 @@ class ProposalsController extends Controller
         return response()->json($FinalAllData);
     }
 
-    public function GetIdsFacilitiesAlike(){
+    private function GetIdsFacilitiesAlike(){
         $user = auth()->user();
         $ids_facilities = [];
         $ids_facilities_temp = $user->bookings()
