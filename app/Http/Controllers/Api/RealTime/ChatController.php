@@ -37,6 +37,9 @@ class ChatController extends Controller
                 "id_recipient" => ["required",Rule::exists("users","id"),"numeric"],
                 "message" => ["required"]
             ]);
+            if($validate->fails()){
+                return response()->json(["Error"=>$validate->errors()]);
+            }
             $user_send_message = auth()->user()->rule;
             if($user_send_message==="0"){
                 $user_recipient_message =  DB::table("users")
@@ -54,9 +57,6 @@ class ChatController extends Controller
             }
             else{
                 throw new \Exception("the user is admin");
-            }
-            if($validate->fails()){
-                return response()->json(["Error"=>$validate->errors()]);
             }
             $message = chat::create([
                "id_send" => auth()->id(),

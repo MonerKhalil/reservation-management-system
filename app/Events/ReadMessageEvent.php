@@ -43,7 +43,7 @@ class ReadMessageEvent implements ShouldBroadcast
     public function broadcastWith(): array
     {
         return [
-            "messages" =>$this->message
+            "id_messages" => $this->message
         ];
     }
 

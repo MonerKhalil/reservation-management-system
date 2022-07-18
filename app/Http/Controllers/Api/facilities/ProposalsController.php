@@ -8,6 +8,7 @@ use App\Models\bookings;
 use App\Models\facilities;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use function PHPUnit\Framework\isEmpty;
 
 class ProposalsController extends Controller
 {
@@ -26,26 +27,30 @@ class ProposalsController extends Controller
         }
     }
 
-    public function MostBooked(): \Illuminate\Support\Collection
+    public function MostBooked(): \Illuminate\Http\JsonResponse
     {
         $Facilities = DB::table("bookings")
             ->selectRaw('COUNT(bookings.id_facility) as NumBooking,facilities.*')
             ->leftJoin('facilities','facilities.id','=','bookings.id_facility')
             ->groupBy(["bookings.id_facility"])
             ->orderByDesc("NumBooking")
-            ->take(100)
+            ->take(10)
             ->get();
         $this->WithPhotos($Facilities);
-        return $Facilities;
+        return response()->json($Facilities);
     }
     public function Proposals(Request $request): \Illuminate\Http\JsonResponse
     {
+        if(isEmpty($this->GetIdsFacilitiesAlike())){
+            return $this->MostBooked();
+        }else{
         $FacilitiesAlike = facilities::whereIn("id",$this->GetIdsFacilitiesAlike())
              ->orderBy("rate","desc")
              ->paginate($this->NumberOfValues($request));
         $FinalAllData = $this->Paginate("facilities",$FacilitiesAlike);
         $this->WithPhotos($FinalAllData["facilities"]);
         return response()->json($FinalAllData);
+        }
     }
 
     private function GetIdsFacilitiesAlike(){
