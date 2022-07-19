@@ -3,6 +3,7 @@
 namespace App\Class_Public;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use phpDocumentor\Reflection\DocBlock\Tags\Throws;
 
 
@@ -44,5 +45,4 @@ trait Paginate
         }
         return true;
     }
-
 }

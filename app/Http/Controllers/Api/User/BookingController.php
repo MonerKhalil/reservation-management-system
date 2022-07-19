@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\User;
 use App\Class_Public\DataInNotifiy;
 use App\Class_Public\Paginate;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\PhotoResource;
 use App\Models\bookings;
 use App\Models\facilities;
 use App\Models\User;
@@ -20,9 +21,41 @@ class BookingController extends Controller
     use Paginate;
     public function __construct()
     {
-        $this->middleware(["auth:userapi", "multi.auth:0|2"]);
+        $this->middleware(["auth:userapi","multi.auth:0"]);
     }
 
+
+    public function Display_Booking(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $user = auth()->user();
+        try {
+            $validate = Validator::make($request->all(),[
+                "num_values" => ["nullable","numeric"]
+            ]);
+            if($validate->fails())
+            {
+                return \response()->json([
+                    "Error" => $validate->errors()
+                ],401);
+            }
+            $facilities = $user->bookings()
+                ->select(DB::raw("bookings.*,facilities.name"))
+                ->join("facilities","facilities.id","=","bookings.id_facility")
+                ->paginate($this->NumberOfValues($request));
+            $facilities = $this->Paginate("infoBookings",$facilities);
+            foreach ($facilities["infoBookings"] as $item){
+                $item->photos = DB::table("photos_facility")
+                    ->select(["photos_facility.id as id_photo","photos_facility.path_photo"])
+                    ->where("photos_facility.id_facility",$item->id_facility)
+                    ->get();
+            }
+            return \response()->json($facilities);
+        }catch (\Exception $exception){
+            return \response()->json([
+                "Error" => $exception->getMessage()
+            ],401);
+        }
+    }
     public function DatesNotAvailable(Request $request)
     {
         try {
@@ -37,9 +70,9 @@ class BookingController extends Controller
             }
             $facility = facilities::all()
                 ->where("id",$request->id_facility)->first()
-                ->bookings()->select(["id","start_date","end_date"])
+                ->bookings()->select(["id as id_booking","start_date","end_date"])
                 ->paginate($this->NumberOfValues($request));
-            return $this->Paginate("facility",$facility);
+            return $this->Paginate("bookings",$facility);
         }catch (\Exception $exception){
             return \response()->json([
                 "Error" => $exception->getMessage()
@@ -103,7 +136,7 @@ class BookingController extends Controller
             $time = round(abs(strtotime(Carbon::now()) - strtotime($booking->created_at))/86400);
             if($time > 1){
                 return \response()->json(["Error"=>[
-                    "facility" => "You Can't UnBooking because .....!!"
+                    "facility" => "You Can't UnBooking because The time limit for the cancellation process has been broken :("
                 ]]);
             }
             else{
@@ -178,7 +211,7 @@ class BookingController extends Controller
                 }else{
                     DB::rollBack();
                     return \response()->json(["Error"=>[
-                        "user" => "The User Amount Not ! -_-"
+                        "user" => "There is not enough balance to reserve ! -_-"
                     ]]);
                 }
             }else{
@@ -244,4 +277,6 @@ class BookingController extends Controller
         }
         return -1;
     }
+
+
 }

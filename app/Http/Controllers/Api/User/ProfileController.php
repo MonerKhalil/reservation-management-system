@@ -173,37 +173,4 @@ class ProfileController extends Controller
             ],401);
         }
     }
-
-    public function Display_Booking(Request $request): \Illuminate\Http\JsonResponse
-    {
-        $user = auth()->user();
-        try {
-            $validate = Validator::make($request->all(),[
-                "num_values" => ["nullable","numeric"]
-            ]);
-            if($validate->fails())
-            {
-                return \response()->json([
-                    "Error" => $validate->errors()
-                ],401);
-            }
-            $facilities = $user->bookings()->paginate($this->NumberOfValues($request));
-            $facilities = $this->Paginate("infoBookings",$facilities);
-            foreach ($facilities["infoBookings"] as $item){
-                $item->facility = facilities::where("id",$item->id_facility)->first();
-                $temp = $user->favorites()->where("id_facility",$item->id_facility)->first();
-                if (is_null($temp)){
-                    $item->favorite = false;
-                }else{
-                    $item->favorite=true;
-                }
-            }
-            return \response()->json($facilities);
-        }catch (\Exception $exception){
-            return \response()->json([
-                "Error" => $exception->getMessage()
-            ],401);
-        }
-    }
-
 }

@@ -60,6 +60,9 @@ class AdminController extends Controller
         }
     }
 
+
+
+    //update to 1 or 0 rule
     public function ShowUsersAll(Request $request): \Illuminate\Http\JsonResponse
     {
         try {

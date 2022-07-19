@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use \App\Http\Controllers\Api\User\BookingController;
 
 Route::controller(BookingController::class)->prefix("bookings")->group(function (){
+    Route::get("ِِshow","Display_Booking");
     Route::get("dates","DatesNotAvailable");
     Route::get("costbooking","CostBooking");
     Route::get("info","GetInfoBooking");
