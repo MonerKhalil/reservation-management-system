@@ -104,7 +104,6 @@ class ChatController extends Controller
         }
     }
 
-
     public function GetIdsChats(Request $request): \Illuminate\Http\JsonResponse
     {
         try {
