@@ -21,7 +21,9 @@ class BookingController extends Controller
     use Paginate;
     public function __construct()
     {
-        $this->middleware(["auth:userapi","multi.auth:0"]);
+        $this->middleware(["auth:userapi","multi.auth:0"])->except("GetInfoBooking");
+        $this->middleware(["auth:userapi"])->only("GetInfoBooking");
+
     }
 
 
@@ -39,16 +41,18 @@ class BookingController extends Controller
                 ],401);
             }
             $facilities = $user->bookings()
-                ->select(DB::raw("bookings.*,facilities.name"))
+                ->select(DB::raw("bookings.*,facilities.name,photos_facility.path_photo"))
                 ->join("facilities","facilities.id","=","bookings.id_facility")
+                ->leftJoin("photos_facility","photos_facility.id_facility","=","bookings.id_facility")
+                ->groupBy("facilities.id")
                 ->paginate($this->NumberOfValues($request));
             $facilities = $this->Paginate("infoBookings",$facilities);
-            foreach ($facilities["infoBookings"] as $item){
-                $item->photos = DB::table("photos_facility")
-                    ->select(["photos_facility.id as id_photo","photos_facility.path_photo"])
-                    ->where("photos_facility.id_facility",$item->id_facility)
-                    ->get();
-            }
+//            foreach ($facilities["infoBookings"] as $item){
+//                $item->photos = DB::table("photos_facility")
+//                    ->select(["photos_facility.id as id_photo","photos_facility.path_photo"])
+//                    ->where("photos_facility.id_facility",$item->id_facility)
+//                    ->get();
+//            }
             return \response()->json($facilities);
         }catch (\Exception $exception){
             return \response()->json([
