@@ -104,19 +104,24 @@ class ChatController extends Controller
         }
     }
 
+    private function Ids(){
+        $user = auth()->user()->id;
+        $ids = DB::table("chats")
+            ->select("id_recipient")
+            ->where("id_send",$user)
+            ->distinct();
+        return DB::table("chats")
+            ->select("id_send as id")
+            ->where("id_recipient",$user)
+            ->distinct()
+            ->union($ids)->get();
+    }
+
     public function GetIdsChats(Request $request): \Illuminate\Http\JsonResponse
     {
         try {
             $user = auth()->user()->id;
-            $ids = DB::table("chats")
-                ->select("id_recipient")
-                ->where("id_send",$user)
-                ->distinct();
-            $idsFinal = DB::table("chats")
-                ->select("id_send as id")
-                ->where("id_recipient",$user)
-                ->distinct()
-                ->union($ids)->get();
+            $idsFinal = $this->Ids();
             foreach ($idsFinal as $chat){
                 $chat->LastMessageDate = DB::table("chats")
                     ->select("created_at")
@@ -140,17 +145,7 @@ class ChatController extends Controller
     {
         try {
             $user = auth()->user()->id;
-            $ids = DB::table("chats")
-                ->select("id_recipient")
-                ->where("id_send",$user)
-                ->distinct();
-            $idsFinal = DB::table("chats")
-                ->select("id_send as id")
-                ->where("id_recipient",$user)
-                ->distinct()
-                ->union($ids)->get();
-//                ->paginate($this->NumberOfValues($request));
-//            $Final_All_Data = $this->Paginate("Chats",$idsFinal);
+            $idsFinal = $this->Ids();
             foreach ($idsFinal as $chat){
                 ### Profile ###
                 $chat->profile_rec = DB::table("users")
