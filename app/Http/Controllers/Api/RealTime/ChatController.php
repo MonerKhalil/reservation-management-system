@@ -104,8 +104,7 @@ class ChatController extends Controller
         }
     }
 
-    private function Ids(){
-        $user = auth()->user()->id;
+    private function Ids($user){
         $ids = DB::table("chats")
             ->select("id_recipient")
             ->where("id_send",$user)
@@ -121,7 +120,7 @@ class ChatController extends Controller
     {
         try {
             $user = auth()->user()->id;
-            $idsFinal = $this->Ids();
+            $idsFinal = $this->Ids($user);
             foreach ($idsFinal as $chat){
                 $chat->LastMessageDate = DB::table("chats")
                     ->select("created_at")
@@ -145,7 +144,7 @@ class ChatController extends Controller
     {
         try {
             $user = auth()->user()->id;
-            $idsFinal = $this->Ids();
+            $idsFinal = $this->Ids($user);
             foreach ($idsFinal as $chat){
                 ### Profile ###
                 $chat->profile_rec = DB::table("users")
