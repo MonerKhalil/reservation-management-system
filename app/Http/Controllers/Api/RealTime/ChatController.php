@@ -148,10 +148,10 @@ class ChatController extends Controller
                 ->select("id_send as id")
                 ->where("id_recipient",$user)
                 ->distinct()
-                ->union($ids)
-                ->paginate($this->NumberOfValues($request));
-            $Final_All_Data = $this->Paginate("Chats",$idsFinal);
-            foreach ($Final_All_Data["Chats"] as $chat){
+                ->union($ids)->get();
+//                ->paginate($this->NumberOfValues($request));
+//            $Final_All_Data = $this->Paginate("Chats",$idsFinal);
+            foreach ($idsFinal as $chat){
                 ### Profile ###
                 $chat->profile_rec = DB::table("users")
                     ->select(["users.name","users.status","profiles.path_photo"])
@@ -171,7 +171,7 @@ class ChatController extends Controller
                     ->whereNull("read_at")
                     ->count("id");
             }
-            return response()->json($Final_All_Data);
+            return response()->json(["chats"=>$idsFinal]);
         }catch (\Exception $exception){
             return response()->json(["Error"=>$exception->getMessage()]);
         }
