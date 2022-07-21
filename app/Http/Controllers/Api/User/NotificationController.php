@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Api\User;
 
-use App\Class_Public\Paginate;
+use App\Class_Public\GeneralTrait;
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -10,7 +10,7 @@ use Illuminate\Validation\Rule;
 
 class NotificationController extends Controller
 {
-    use Paginate;
+    use GeneralTrait;
     public function __construct()
     {
         $this->middleware(["auth:userapi"]);

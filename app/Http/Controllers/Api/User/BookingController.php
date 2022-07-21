@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api\User;
 
 use App\Class_Public\DataInNotifiy;
-use App\Class_Public\Paginate;
+use App\Class_Public\GeneralTrait;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\PhotoResource;
 use App\Models\bookings;
@@ -18,7 +18,7 @@ use Validator;
 
 class BookingController extends Controller
 {
-    use Paginate;
+    use GeneralTrait;
     public function __construct()
     {
         $this->middleware(["auth:userapi","multi.auth:0"])->except("GetInfoBooking");

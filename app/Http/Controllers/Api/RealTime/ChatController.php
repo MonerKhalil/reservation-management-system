@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Api\RealTime;
 
-use App\Class_Public\Paginate;
+use App\Class_Public\GeneralTrait;
 use App\Events\ChatEvent;
 use App\Events\ReadMessageEvent;
 use App\Http\Controllers\Controller;
@@ -18,7 +18,7 @@ use function PHPUnit\Framework\throwException;
 
 class ChatController extends Controller
 {
-    use Paginate;
+    use GeneralTrait;
 
     public function __construct()
     {

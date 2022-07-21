@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Api\facilities;
 
-use App\Class_Public\Paginate;
+use App\Class_Public\GeneralTrait;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -11,7 +11,7 @@ use Illuminate\Validation\Rule;
 
 class SearchController extends Controller
 {
-    use Paginate;
+    use GeneralTrait;
     private $num_values = null;
     private $facilities;
 

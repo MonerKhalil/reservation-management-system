@@ -7,8 +7,12 @@ use Illuminate\Support\Facades\DB;
 use phpDocumentor\Reflection\DocBlock\Tags\Throws;
 
 
-trait Paginate
+trait GeneralTrait
 {
+    public function path_file (): string
+    {
+        return storage_path("app/public/TempCountsUsers.json");
+    }
     public function Paginate(string $namedata,$paginate): array
     {
         return [
@@ -34,15 +38,18 @@ trait Paginate
     public function Check_Date($datestr,$dateend): bool
     {
         $num = round(strtotime($dateend) - strtotime($datestr));
-//        $DStr = explode('-', $datestr);
-//        $DEnd = explode('-', $dateend);
-//        for ($i=0;$i<count($DStr);$i++){
-//            if($DStr[$i]>$DEnd[$i])
-//                return false;
-//        }
         if($num<0){
             return false;
         }
         return true;
+    }
+
+    public function GetJsonFile($path){
+        $jsonString = file_get_contents($path);
+        return json_decode($jsonString, true);
+    }
+
+    public function UpdateJsonFile($path,$newData){
+        file_put_contents($path, json_encode($newData));
     }
 }

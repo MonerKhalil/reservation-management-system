@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\User;
 
+use App\Class_Public\GeneralTrait;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -11,6 +12,7 @@ use Illuminate\Validation\Rule;
 
 class AuthController extends Controller
 {
+    use GeneralTrait;
     public function __construct()
     {
         $this->middleware("auth:userapi")->except(["register","login"]);
@@ -88,22 +90,14 @@ class AuthController extends Controller
         }
     }
 
-    public function user()
-    {
-        $user=auth()->user();
-        $temp = clone $user;
-        return $user ? response()->json([
-            "user"=>$user,
-            "path_photo"=>$temp->profile->path_photo??null
-        ],201) : response()->json(["Error"=>"Not Exists user"],401);
-    }
-
-
     public function logout()
     {
         try {
             $user=auth()->user();
             $user->currentAccessToken()->delete();
+            $data = $this->GetJsonFile($this->path_file());
+            $data["countLogout"] += 1 ;
+            $this->UpdateJsonFile($this->path_file(),$data);
             return response()->json(["Message"=>"Successfully logged out"],201);
         }catch (\Exception $exception){
             return response()->json([

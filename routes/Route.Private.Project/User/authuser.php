@@ -6,7 +6,6 @@ use \App\Http\Controllers\Api\User\AuthController;
 
 
 Route::controller(AuthController::class)->prefix("auth")->group(function (){
-    Route::get("user","user");
     Route::post("register","register");
     Route::post("login","login");
     Route::delete("logout","logout");

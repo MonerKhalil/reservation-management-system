@@ -2,22 +2,142 @@
 
 namespace App\Http\Controllers\Api\Admin;
 
-use App\Class_Public\Paginate;
+use App\Class_Public\GeneralTrait;
 use App\Http\Controllers\Api\User\AuthController;
+use App\Http\Controllers\Api\User\BookingController;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
-class AdminController extends Controller
+class UsersController extends Controller
 {
-    use Paginate;
+    use GeneralTrait;
 
     public function __construct()
     {
         $this->middleware(["auth:userapi","multi.auth:2"]);
+    }
+
+    public function CountNewUsersInLastMonth(): \Illuminate\Http\JsonResponse
+    {
+        try {
+            $Date = Carbon::now()->subMonths(1)->subDay(1);
+            return \response()->json(["numUsers"=>User::all()->where("created_at",">=",$Date)->count()]);
+        } catch (\Exception $exception){
+            return \response()->json([
+                "Error" => $exception->getMessage()
+            ],401);
+        }
+    }
+
+    public function CountUsersInSystem(Request $request): \Illuminate\Http\JsonResponse
+    {
+        try {
+            $validate = Validator::make($request->all(),[
+                "rule"=>["nullable","string",Rule::in(["0","1"])]
+            ]);
+            if($validate->fails())
+            {
+                return \response()->json([
+                    "Error" => $validate->errors()
+                ],401);
+            }
+            $users = is_null(($request->rule)) ? User::all()->where("rule","!=","2")->count() : User::all()->where("rule",$request->rule)->count();
+            return \response()->json(["numUsers"=>$users]);
+        } catch (\Exception $exception){
+            return \response()->json([
+                "Error" => $exception->getMessage()
+            ],401);
+        }
+    }
+
+    public function CountUsersLogoutInSystem(): \Illuminate\Http\JsonResponse
+    {
+        try {
+            return \response()->json(["numUsers"=>$this->GetJsonFile($this->path_file())["countLogout"]]);
+        } catch (\Exception $exception){
+            return \response()->json([
+                "Error" => $exception->getMessage()
+            ],401);
+        }
+    }
+
+    public function UserBooking(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $booking = new BookingController();
+        return $booking->GetInfoBooking($request);
+    }
+
+    public function UserProfile(Request $request): \Illuminate\Http\JsonResponse
+    {
+        try {
+            $validate = Validator::make($request->all(),[
+                "id" => ["required",Rule::exists("users","id")]
+            ]);
+            if($validate->fails())
+            {
+                return \response()->json([
+                    "Error" => $validate->errors()
+                ],401);
+            }
+            $user = User::with("profile")
+                ->where("id","=",$request->id)
+                ->first();
+            if($user->rule==="2"){
+                throw new \Exception("the user is admin");
+            }
+            return \response()->json([
+                "user" => $user
+            ]);
+        } catch (\Exception $exception){
+            return \response()->json([
+                "Error" => $exception->getMessage()
+            ],401);
+        }
+    }
+
+    public function ShowUsersAllRule(Request $request): \Illuminate\Http\JsonResponse
+    {
+        try {
+            $validate = Validator::make($request->all(),[
+                "num_values" => ["nullable","numirce"],
+                "rule"=>["nullable","string",Rule::in(["0","1"])]
+            ]);
+            if($validate->fails())
+            {
+                return \response()->json([
+                    "Error" => $validate->errors()
+                ],401);
+            }
+            if(is_null($request->rule)){
+                $users = User::with("profile")
+                    ->where("rule","!=","2")
+                    ->paginate($this->NumberOfValues($request));
+            }else{
+                $users = User::with("profile")
+                    ->where("rule",$request->rule)
+                    ->paginate($this->NumberOfValues($request));
+            }
+            return \response()->json([
+                $this->Paginate("users",$users)
+            ]);
+        } catch (\Exception $exception){
+            return \response()->json([
+                "Error" => $exception->getMessage()
+            ],401);
+        }
+    }
+
+    public function AddUser(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $test = new AuthController();
+        return $test->register($request);
     }
 
     public function DeleteUser(Request $request): \Illuminate\Http\JsonResponse
@@ -60,29 +180,6 @@ class AdminController extends Controller
         }
     }
 
-    //update to 1 or 0 rule
-    public function ShowUsersAll(Request $request): \Illuminate\Http\JsonResponse
-    {
-        try {
-            $validate = Validator::make($request->all(),[
-                "num_values" => ["nullable","numirce"]
-            ]);
-            $users = User::with("profile")
-                ->where("rule","!=","2")
-                ->paginate($this->NumberOfValues($request));
-            return \response()->json([
-                $this->Paginate("users",$users)
-            ]);
-        } catch (\Exception $exception){
-            return \response()->json([
-                "Error" => $exception->getMessage()
-            ],401);
-        }
-    }
-
-    /**
-     * @throws \Throwable
-     */
     public function UpdateUser(Request $request): \Illuminate\Http\JsonResponse
     {
         DB::beginTransaction();
@@ -164,10 +261,5 @@ class AdminController extends Controller
         }
     }
 
-    public function AddUser(Request $request): \Illuminate\Http\JsonResponse
-    {
-        $test = new AuthController();
-        return $test->register($request);
-    }
 
 }

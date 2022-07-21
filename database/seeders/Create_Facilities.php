@@ -22,14 +22,14 @@ class Create_Facilities extends Seeder
      */
     public function run()
     {
-        bookings::create([
-            "id_user" => 4,
-            "id_facility" => 1,
-            "cost" => (float)rand(100,440),
-            //YYYY-MM-DD HH:MM:SS
-            "start_date" => "2022-06-01",
-            "end_date" => "2022-06-06"
-        ]);
+//        bookings::create([
+//            "id_user" => 4,
+//            "id_facility" => 1,
+//            "cost" => (float)rand(100,440),
+//            //YYYY-MM-DD HH:MM:SS
+//            "start_date" => "2022-06-01",
+//            "end_date" => "2022-06-06"
+//        ]);
 //        for ($i=1;$i<=10;$i++){
 //            $name = \Str::random(10);
 //            User::create([
@@ -40,21 +40,21 @@ class Create_Facilities extends Seeder
 //                "amount" => (float)rand(500,1000),
 //            ]);
 //        }
-//        for($i=1;$i<50;$i++)
-//        {
-//            $name = \Str::random(10);
-//            facilities::create([
-//                "id_user" =>rand(2,5),
-//                "name"=> $name,
-//                "location"=> $name."location",
-//                "description"=> $name."description",
-//                "type"=> $this->rrr(),
-//                "cost"=> (float) rand(100,1000),
-//                "rate"=> (integer) rand(1,5),
-//                "num_guest"=> (integer) rand(1,5),
-//                "num_room"=> (integer) rand(1,5),
-//                "wifi"=>(bool) rand(true,false),
-//            ]);
-//        }
+        for($i=1;$i<2000;$i++)
+        {
+            $name = \Str::random(10);
+            facilities::create([
+                "id_user" =>rand(25,30),
+                "name"=> $name,
+                "location"=> $name."location",
+                "description"=> $name."description",
+                "type"=> $this->rrr(),
+                "cost"=> (float) rand(100,1000),
+                "rate"=> (integer) rand(1,5),
+                "num_guest"=> (integer) rand(1,5),
+                "num_room"=> (integer) rand(1,5),
+                "wifi"=>(bool) rand(true,false),
+            ]);
+        }
     }
 }

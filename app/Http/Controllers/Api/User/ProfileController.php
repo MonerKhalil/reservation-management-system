@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers\Api\User;
 
-use App\Class_Public\Paginate;
-use App\Http\Controllers\Api\Admin\AdminController;
+use App\Class_Public\GeneralTrait;
+use App\Http\Controllers\Api\Admin\UsersController;
 use App\Http\Controllers\Controller;
 use App\Models\facilities;
 use App\Models\favorites;
@@ -17,7 +17,7 @@ use phpDocumentor\Reflection\Types\ClassString;
 
 class ProfileController extends Controller
 {
-    use Paginate;
+    use GeneralTrait;
     public function __construct()
     {
         $this->middleware(["auth:userapi"]);
@@ -39,36 +39,6 @@ class ProfileController extends Controller
             ],401);
         }
     }
-
-
-    public function UserProfileOther(Request $request): \Illuminate\Http\JsonResponse
-    {
-        try {
-            $validate = Validator::make($request->all(),[
-                "id" => ["required",Rule::exists("users","id")]
-            ]);
-            if($validate->fails())
-            {
-                return \response()->json([
-                    "Error" => $validate->errors()
-                ],401);
-            }
-            $user = User::with("profile")
-                ->where("id","=",$request->id)
-                ->first();
-            if($user->rule==="2"){
-                throw new \Exception("the user is admin");
-            }
-            return \response()->json([
-                "user" => $user
-            ]);
-        } catch (\Exception $exception){
-            return \response()->json([
-                "Error" => $exception->getMessage()
-            ],401);
-        }
-    }
-
     /**
      * @throws \Throwable
      */
