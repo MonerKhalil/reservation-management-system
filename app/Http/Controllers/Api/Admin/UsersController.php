@@ -6,6 +6,7 @@ use App\Class_Public\GeneralTrait;
 use App\Http\Controllers\Api\User\AuthController;
 use App\Http\Controllers\Api\User\BookingController;
 use App\Http\Controllers\Controller;
+use App\Models\bookings;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -24,11 +25,22 @@ class UsersController extends Controller
         $this->middleware(["auth:userapi","multi.auth:2"]);
     }
 
-    public function CountNewUsersInLastMonth(): \Illuminate\Http\JsonResponse
+    public function CountNewAllUsersInLast5Month(): \Illuminate\Http\JsonResponse
     {
         try {
-            $Date = Carbon::now()->subMonths(1)->subDay(1);
-            return \response()->json(["numUsers"=>User::all()->where("created_at",">=",$Date)->count()]);
+            $data = User::select(DB::raw("count(*) as count"),DB::raw("month(created_at) as month"))
+                ->whereYear("created_at",Carbon::now()->year)
+                ->where("rule","!=","2")
+                ->groupBy(DB::raw("month"))
+                ->orderBy("month","desc")
+                ->take(5)
+                ->pluck("count","month");
+            foreach ($data->keys() as $key){
+                $temp = date("F",mktime(0,0,0,$key,1));
+                $data[$temp] = $data[$key];
+                unset($data[$key]);
+            }
+            return \response()->json(["month"=>$data]);
         } catch (\Exception $exception){
             return \response()->json([
                 "Error" => $exception->getMessage()
@@ -70,15 +82,42 @@ class UsersController extends Controller
 
     public function UserBooking(Request $request): \Illuminate\Http\JsonResponse
     {
-        $booking = new BookingController();
-        return $booking->GetInfoBooking($request);
+        try {
+            $validate = Validator::make($request->all(),[
+                "id_user" => ["nullable","numeric",Rule::exists("users","id")]
+            ]);
+            if($validate->fails())
+            {
+                return \response()->json([
+                    "Error" => $validate->errors()
+                ],401);
+            }
+            $facilities = User::where("id",$request->id_user)->first()->bookings()
+                ->select(DB::raw("bookings.*,facilities.name,photos_facility.path_photo"))
+                ->join("facilities","facilities.id","=","bookings.id_facility")
+                ->leftJoin("photos_facility","photos_facility.id_facility","=","bookings.id_facility")
+                ->groupBy("facilities.id")
+                ->paginate($this->NumberOfValues($request));
+            $facilities = $this->Paginate("infoBookings",$facilities);
+//            foreach ($facilities["infoBookings"] as $item){
+//                $item->photos = DB::table("photos_facility")
+//                    ->select(["photos_facility.id as id_photo","photos_facility.path_photo"])
+//                    ->where("photos_facility.id_facility",$item->id_facility)
+//                    ->get();
+//            }
+            return \response()->json($facilities);
+        }catch (\Exception $exception){
+            return \response()->json([
+                "Error" => $exception->getMessage()
+            ],401);
+        }
     }
 
     public function UserProfile(Request $request): \Illuminate\Http\JsonResponse
     {
         try {
             $validate = Validator::make($request->all(),[
-                "id" => ["required",Rule::exists("users","id")]
+                "id_user" => ["required",Rule::exists("users","id")]
             ]);
             if($validate->fails())
             {
@@ -87,7 +126,7 @@ class UsersController extends Controller
                 ],401);
             }
             $user = User::with("profile")
-                ->where("id","=",$request->id)
+                ->where("id","=",$request->id_user)
                 ->first();
             if($user->rule==="2"){
                 throw new \Exception("the user is admin");
@@ -124,9 +163,9 @@ class UsersController extends Controller
                     ->where("rule",$request->rule)
                     ->paginate($this->NumberOfValues($request));
             }
-            return \response()->json([
+            return \response()->json(
                 $this->Paginate("users",$users)
-            ]);
+            );
         } catch (\Exception $exception){
             return \response()->json([
                 "Error" => $exception->getMessage()
@@ -260,6 +299,5 @@ class UsersController extends Controller
             ],401);
         }
     }
-
 
 }

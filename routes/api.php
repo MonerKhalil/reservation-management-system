@@ -6,14 +6,12 @@ Broadcast::routes(['middleware' => ['auth:userapi']]);
 
 //TEST
 Route::match(["get", "post", "delete"],
-    "test",[\App\Http\Controllers\Api\Admin\FacilitiesController::class,"CountFacilities"]);
+    "test",[\App\Http\Controllers\Api\Admin\FacilitiesController::class,"AllData"]);
 //
 
 ############### Start Admin ######################
 
-require __DIR__ . "\\Route.Private.Project\\"."Admin\\"."users.php";
-
-require __DIR__ . "\\Route.Private.Project\\"."Admin\\"."facilities.php";
+require __DIR__ . "\\Route.Private.Project\\"."Admin\\"."admin.php";
 
 ############### End Admin ######################
 

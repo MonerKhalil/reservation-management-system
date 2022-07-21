@@ -147,6 +147,9 @@ class BookingController extends Controller
                 $owner->decrement("amount",$booking->cost);
                 $user->increment("amount",$booking->cost);
                 $booking->delete();
+                $data = $this->GetJsonFile($this->path_file());
+                $data["countCancel"] += 1 ;
+                $this->UpdateJsonFile($this->path_file(),$data);
                 DB::commit();
                 $header = "unbooking facility ".$facility->name;
                 $body = "This property has already been cancelled ".$user->name;
