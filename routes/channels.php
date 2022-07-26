@@ -2,6 +2,9 @@
 
 use Illuminate\Support\Facades\Broadcast;
 
+Broadcast::routes(['middleware' => ['auth:userapi']]);
+
+
 ############ Start Chats ############
 Broadcast::channel('Room.Chat.{id}', function ($user, $id) {
     return (int) $user->id === (int) $id;
