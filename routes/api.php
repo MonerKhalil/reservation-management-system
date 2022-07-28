@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Broadcast;
 
 //Broadcast::routes(['prefix' => 'api','middleware' => ['auth:userapi']]);
+Broadcast::routes(['prefix' => 'api','middleware' => ["api",'auth:userapi']]);
 
 
 //TEST

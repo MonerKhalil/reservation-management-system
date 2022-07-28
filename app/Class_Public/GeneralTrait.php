@@ -11,7 +11,7 @@ trait GeneralTrait
 {
     public function path_file (): string
     {
-        return storage_path("app/public/TempCountsUsers.json");
+        return storage_path("app\\public\\TempCountsUsers.json");
     }
     public function Paginate(string $namedata,$paginate): array
     {

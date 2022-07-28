@@ -2,12 +2,10 @@
 
 ############ Start Chats ############
 Broadcast::channel('Room.Chat.{id}', function ($user, $id) {
-    if(auth("userapi")->check()){
-        return ["id"=>$user->id,"name"=>$user->name];
-    }
-    return null;
+    echo "xxxxxxxxxxxxxxxxxxxxx";
+    //"socket_id":"9712.8722294"
 //    return true;
-//    return (int) $user->id === (int) $id;
+    return (int) $user->id === (int) $id;
 });
 
 Broadcast::channel('Read.Messages.{id}', function ($user, $id) {
