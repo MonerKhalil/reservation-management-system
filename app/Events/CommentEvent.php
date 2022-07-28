@@ -14,17 +14,18 @@ class CommentEvent implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public $comment,$user;
+    public $review,$profile,$name,$path_photo;
 
     /**
      * Create a new event instance.
      *
      * @return void
      */
-    public function __construct($user,$comment)
+    public function __construct($name,$path_photo,$review)
     {
-        $this->user = $user;
-        $this->comment = $comment;
+        $this->name = $name;
+        $this->path_photo = $path_photo;
+        $this->review = $review;
     }
 
     /**
@@ -34,7 +35,7 @@ class CommentEvent implements ShouldBroadcast
      */
     public function broadcastOn()
     {
-        return new PrivateChannel('User.Comment.Facility.'.$this->comment->id_facility);
+        return new Channel('User.Comment.Facility.'.$this->review->id_facility);
     }
     public function broadcastAs():string
     {
@@ -43,8 +44,11 @@ class CommentEvent implements ShouldBroadcast
     public function broadcastWith():array
     {
         return [
-            "comment" => $this->comment,
-            "user" => $this->user
+            "comment" => $this->review,
+            "user" => [
+                "name" => $this->name,
+                "path" => $this->path_photo
+            ]
         ];
     }
 }

@@ -109,19 +109,14 @@ class ReviewController extends Controller
                     "Error" => $validate->errors()
                 ],401);
             }
-            $review = $user->reviews()->where("id_facility",$request->id_facility)->first();
+            $review = $user->reviews()->where("id_facility",$request->id_facility)->where("id_user",$user->id)->first();
             if(!is_null($review)){
-                $review = review::update([
-                    "id_facility"=>$request->id_facility,
-                    "id_user"=>$user->id
-                ],[
+                $review->update(
+                    [
                     "comment"=>$request->comment
                 ]);
+                broadcast(new CommentEvent($user->name, $user->profile->path_photo,$review));
                 DB::commit();
-                $profile = new class{};
-                $profile->name = $user->name;
-                $profile->path_photo = $user->profile()->path_photo;
-                broadcast(new CommentEvent($profile,$review));
                 return \response()->json([
                     "review" => $review
                 ]);

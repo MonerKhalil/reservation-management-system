@@ -21,6 +21,7 @@ trait GeneralTrait
             "url_next_page" => $paginate->nextPageUrl(),
             "url_first_page" => $paginate->path()."?page=1",
             "url_last_page" => $paginate->path()."?page=".$paginate->lastPage(),
+            "total_pages" => $paginate->lastPage(),
             "total_items" => $paginate->total()
         ];
     }
