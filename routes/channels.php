@@ -9,9 +9,9 @@
 //});
 
 
-Broadcast::channel('Read.Messages.{id}', function ($user, $id) {
-    return (int) $user->id === (int) $id;
-});
+//Broadcast::channel('Read.Messages.{id}', function ($user, $id) {
+//    return (int) $user->id === (int) $id;
+//});
 ############ End Chats ############
 
 

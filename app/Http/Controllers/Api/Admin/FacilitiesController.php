@@ -10,7 +10,10 @@ use App\Models\facilities;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class FacilitiesController extends Controller
 {
@@ -156,4 +159,31 @@ class FacilitiesController extends Controller
 
     }
 
+    public function DeleteFacility(Request $request){
+        DB::beginTransaction();
+        try{
+            $validator=Validator::make($request->all(),[
+                "id_facility"=>['required',Rule::exists('facilities','id')],
+            ]);
+            if($validator->fails()){
+                return response()->json([
+                    'Error'=>$validator->errors()
+                ]);
+            }
+            $facility = facilities::where("id",$request->id_facility)->first();
+            $id_photo= $facility->photos;
+            $facility->delete();
+            DB::commit();
+            foreach ($id_photo as $path)
+            {
+                unlink($path->path_photo);
+            }
+            return response(['message'=>'facility deleted successfully']);
+        }catch  (\Exception $exception){
+            DB::rollback();
+            return \response()->json([
+                "Error" => $exception->getMessage()
+            ],401);
+        }
+    }
 }

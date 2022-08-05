@@ -15,16 +15,18 @@ class StatusUserEvent implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public $user;
+    public $state,$id_user,$userCur;
 
     /**
      * Create a new event instance.
      *
      * @return void
      */
-    public function __construct($user)
+    public function __construct($state,$id_user,$userCur)
     {
-        $this->user = $user;
+        $this->id_user = $id_user;
+        $this->state = $state;
+        $this->userCur = $userCur;
     }
 
     /**
@@ -34,7 +36,7 @@ class StatusUserEvent implements ShouldBroadcast
      */
     public function broadcastOn()
     {
-        return new PrivateChannel('Room.Chat.'.$this->user->id);
+        return new Channel('Room.Chat.'.$this->id_user);
     }
 
     public function broadcastAs()
@@ -44,7 +46,8 @@ class StatusUserEvent implements ShouldBroadcast
     public function broadcastWith(): array
     {
         return [
-            "status" => $this->user->status
+            "id_user" => $this->userCur,
+            "status" => $this->state
         ];
     }
 }

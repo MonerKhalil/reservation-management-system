@@ -3,6 +3,7 @@
 namespace App\Events;
 
 use App\Models\chat;
+use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
@@ -33,7 +34,7 @@ class ReadMessageEvent implements ShouldBroadcast
      */
     public function broadcastOn()
     {
-        return new PrivateChannel('Read.Messages.'.$this->toUserSend);
+        return new Channel('Read.Messages.'.$this->toUserSend);
     }
 
     public function broadcastAs()

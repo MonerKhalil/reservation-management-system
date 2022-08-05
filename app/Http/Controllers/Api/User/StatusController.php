@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Api\User;
 
 use App\Events\StatusUserEvent;
+use App\Http\Controllers\Api\RealTime\ChatController;
 use App\Http\Controllers\Controller;
+use App\Models\chat;
 use http\Client\Curl\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -27,7 +29,11 @@ class StatusController extends Controller
                 "status" => $state
             ]);
             DB::commit();
-            broadcast(new StatusUserEvent($user));
+            $ids_all = new ChatController();
+            $ids = $ids_all->Ids($user->id)->toArray();
+            foreach ($ids as $id){
+                broadcast(new StatusUserEvent($state,$id->id,$user->id));
+            }
             return response()->json(["Active" => $message]);
         }catch (\Exception $exception){
             DB::rollBack();

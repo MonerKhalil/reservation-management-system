@@ -30,7 +30,6 @@ class FacilitiesController extends Controller{
             'Data'=>$facility
         ]);
     }
-
     public  function  index(){
         try{
             //  $facility=facilities::with('photos')->get();
@@ -46,7 +45,6 @@ class FacilitiesController extends Controller{
         }
 
     }
-
     public  function  show($id){
         try{
             $facility=Auth::user()->user_facilities()->with("photos")->where("id",$id)->first();
@@ -70,7 +68,6 @@ class FacilitiesController extends Controller{
     }
     public  function  delete($id)
     {
-
         DB::beginTransaction();
         try{
 //            $facility= facilities::where([

@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api\User;
 use App\Class_Public\DataInNotifiy;
 use App\Class_Public\GeneralTrait;
 use App\Http\Controllers\Controller;
-use App\Http\Resources\PhotoResource;
 use App\Models\bookings;
 use App\Models\facilities;
 use App\Models\User;
@@ -209,7 +208,7 @@ class BookingController extends Controller
                     $header = "booking facility ".$facility->name;
                     $body = "The facility has been booked by the user ".$user->name;
                     $body_request = ["id_booking"=>$booking->id];
-                    $Data = new DataInNotifiy("/api/bookings/info",$body_request,"GET");
+                    $Data = new DataInNotifiy("/bookings/info",$body_request,"GET");
                     $owner->notify(new UserNotification($header,"Booking",$body,$booking->created_at,$Data
                     ));
                     $user->notify(new UserNotification($header,"Booking",

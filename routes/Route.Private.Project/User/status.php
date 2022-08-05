@@ -5,6 +5,6 @@ use \App\Http\Controllers\Api\User\StatusController;
 
 
 Route::controller(StatusController::class)->prefix("state")->group(function (){
-    Route::put("online","Online");
-    Route::put("offline","Offline");
+    Route::post("online","Online");
+    Route::post("offline","Offline");
 });

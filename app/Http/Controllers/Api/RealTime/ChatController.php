@@ -22,8 +22,8 @@ class ChatController extends Controller
 
     public function __construct()
     {
-        $this->middleware("auth:userapi");
-        $this->middleware(["multi.auth:1|0"]);
+        $this->middleware("auth:userapi")->except("Ids");
+        $this->middleware(["multi.auth:1|0"])->except("Ids");
     }
 
     /**
@@ -104,7 +104,7 @@ class ChatController extends Controller
         }
     }
 
-    private function Ids($user){
+    public function Ids($user){
         $ids = DB::table("chats")
             ->select("id_recipient")
             ->where("id_send",$user)

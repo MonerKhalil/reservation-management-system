@@ -70,6 +70,7 @@ class ProfileController extends Controller
                 if($photo->isValid()){
                     $newPhoto = time().$photo->getClientOriginalName();
                     $newPhoto = 'uploads/Users/'.$newPhoto;
+                    $photo->move('uploads/facility',$newPhoto);
                 }
             }
             auth()->user()->update([
