@@ -13,7 +13,7 @@ class Report extends Controller
 {
     public function __construct()
     {
-        $this->middleware(["auth:userapi","multi.auth:2"])->except(["store","update"]);
+       $this->middleware(["auth:userapi","multi.auth:2"])->except(["store","update"]);
        $this->middleware(["auth:userapi","multi.auth:0"])->only('store');
     }
     public function store(Request $request ): \Illuminate\Http\JsonResponse
