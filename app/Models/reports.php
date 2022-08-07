@@ -10,7 +10,7 @@ class reports extends Model
     use HasFactory;
     protected $table = "reports";
     protected $fillable =[
-        "id_facility"."id_user","report"
+        "id_facility","id_user","report"
     ];
     public function facilities_reports(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {

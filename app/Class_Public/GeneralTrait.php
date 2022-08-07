@@ -13,6 +13,7 @@ trait GeneralTrait
     {
         return storage_path("app\\public\\TempCountsUsers.json");
     }
+
     public function Paginate(string $namedata,$paginate): array
     {
         return [

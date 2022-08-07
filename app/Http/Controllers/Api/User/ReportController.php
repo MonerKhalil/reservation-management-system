@@ -52,8 +52,8 @@ class ReportController extends Controller
                 "id_facility" => $request->id_facility,
                 "report" => $request->report
             ]);
+            DB::commit();
             if($this->CheckIS3Report($facility)){
-                DB::commit();
                 $header = "Report Facility ".$facility->name;
                 $body = "the facility was deleted because the number of reports was equal to 3";
                 Notification::send($admins,new UserNotification($header,"Delete facility",$body,Carbon::now()));
@@ -100,11 +100,10 @@ class ReportController extends Controller
         }
     }
 
-    public function ShowReportsAll(): \Illuminate\Http\JsonResponse
+    public function ShowReportsAll(Request $request): \Illuminate\Http\JsonResponse
     {
-        return response()->json([
-            "reports" => reports::all()
-        ]);
+        $reports = reports::paginate($this->NumberOfValues($request));
+        return response()->json($this->Paginate("reports",$reports));
     }
 
     /**

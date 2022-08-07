@@ -22,7 +22,6 @@ class BookingController extends Controller
     {
         $this->middleware(["auth:userapi","multi.auth:0"])->except("GetInfoBooking");
         $this->middleware(["auth:userapi"])->only("GetInfoBooking");
-
     }
 
 
@@ -59,6 +58,7 @@ class BookingController extends Controller
             ],401);
         }
     }
+
     public function DatesNotAvailable(Request $request)
     {
         try {
@@ -112,10 +112,45 @@ class BookingController extends Controller
             ], 401);
         }
     }
+
+    public function BookingByTheOwner(Request $request): \Illuminate\Http\JsonResponse
+    {
+        try {
+            $validate = Validator::make($request->all(), [
+                "id_facility" => ["required", Rule::exists("facilities", "id"), "numeric"],
+                "start_date" => ["required","date"],
+                "end_date" => ["required","date"]
+            ]);
+            if($validate->fails()){
+                return response()->json(["Error"=>$validate->errors()]);
+            }
+            $start_date = $request->start_date  ?? null;
+            $end_date =  $request->end_date ?? null;
+            if($start_date!==null&&$end_date!==null){
+                if(!$this->Check_Date($start_date,$end_date)){
+                    Throw new \Exception("The Problem in Date :(");
+                }
+            }
+            $user = auth()->user();
+            $facility = facilities::where("id",$request->id_facility)->where("id_user",$user->id)->first();
+            if(!is_null($facility)){
+
+            }else{
+                Throw new \Exception("Unauthenticated.");
+            }
+            return \response()->json(["Error"=>[
+                "facility" => "The Facility is Not Available Now :("
+            ]]);
+        }catch (\Exception $exception){
+            return \response()->json([
+                "Error" => $exception->getMessage()
+            ], 401);
+        }
+    }
+
     /**
      * @throws \Throwable
      */
-
     public function UnBooking(Request $request): \Illuminate\Http\JsonResponse
     {
         try {
@@ -163,7 +198,6 @@ class BookingController extends Controller
             ], 401);
         }
     }
-
 
     public function Booking(Request $request): \Illuminate\Http\JsonResponse
     {
@@ -276,6 +310,7 @@ class BookingController extends Controller
         }
         return false;
     }
+
     private function PriceTheFinal($facility,$start_date,$end_date):float{
         if($this->CheckBooking($facility,$start_date,$end_date)===true){
             $days = round(abs(strtotime($end_date) - strtotime($start_date))/86400)+1;
@@ -283,6 +318,5 @@ class BookingController extends Controller
         }
         return -1;
     }
-
 
 }
