@@ -54,6 +54,7 @@ class ReportController extends Controller
             ]);
             DB::commit();
             if($this->CheckIS3Report($facility)){
+                $this->RefundToUser($facility);
                 $header = "Report Facility ".$facility->name;
                 $body = "the facility was deleted because the number of reports was equal to 3";
                 Notification::send($admins,new UserNotification($header,"Delete facility",$body,Carbon::now()));
@@ -139,6 +140,33 @@ class ReportController extends Controller
         }
     }
 
+    /**
+     * @throws \Throwable
+     */
+    public function RefundToUser($facility){
+        DB::beginTransaction();
+        try {
+            $owner = User::where("id",$facility->id_user)->first();
+            $bookings = bookings::where("id_facility",$facility->id)->where("start_date",">=",Carbon::now())->get()->toArray();
+            $header = "Delete facility ".$facility->name;
+            $body = "Delete facility because 3 Report to users Sorry Done Refund Price";
+            foreach ($bookings as $booking){
+                $user = User::where("id",$booking["id_user"])->first();
+                $owner->decrement("amount",$booking["cost"]);
+                $user->increment("amount",$booking["cost"]);
+                $user->notify(new UserNotification($header,"Delete facility", $body,Carbon::now()));
+            }
+            $owner->notify(new UserNotification($header,"Delete facility",$body,Carbon::now()));
+            DB::commit();
+            return 1;
+        }catch (\Exception $exception){
+            DB::rollBack();
+            return response()->json([
+            "Error" => $exception->getMessage()
+            ],401);
+        }
+    }
+
     private function CheckIS3Report($facility): bool
     {
         $count = reports::where("id_facility",$facility->id)->count("id");
@@ -153,9 +181,11 @@ class ReportController extends Controller
         }
         return false;
     }
+
     private function CheckBooking(int $iduser,int $idfacility): bool
     {
         $booking = bookings::where("id_user",$iduser)->where("id_facility",$idfacility)->first();
         return is_null($booking);
     }
+
 }

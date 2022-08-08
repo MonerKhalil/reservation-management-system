@@ -2,6 +2,9 @@
 
 namespace App\Class_Public;
 
+use App\Models\bookings;
+use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use phpDocumentor\Reflection\DocBlock\Tags\Throws;
@@ -26,6 +29,7 @@ trait GeneralTrait
             "total_items" => $paginate->total()
         ];
     }
+
     public function NumberOfValues(Request $request): int
     {
         try {
@@ -37,6 +41,16 @@ trait GeneralTrait
             return 10;
         }
     }
+
+    public function CheckAreBookingToFacility($id_fac){
+
+        $bookings = bookings::where("id_facility",$id_fac)->where("start_date",">=",Carbon::now())->get();
+        $users = [];
+        foreach ($bookings as $booking){
+
+        }
+    }
+
     public function Check_Date($datestr,$dateend): bool
     {
         $num = round(strtotime($dateend) - strtotime($datestr));

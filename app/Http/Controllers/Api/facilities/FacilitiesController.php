@@ -335,4 +335,29 @@ class FacilitiesController extends Controller{
         $_photo->delete();
         }
     }
+
+    public function status(Request  $request){
+        $validator = Validator::make($request->all(),[
+            'id_facility'=>['required',Rule::exists("facilities","id")],
+        ]);
+        if ($validator->fails()) {
+            return response()->json([$validator->errors()]);
+        }
+        $facility = \auth()->user()->user_facilities()->where("id",$request->id_facility)->first();
+        if(!is_null($facility) && $facility->available==true ){
+            $facility->update([
+                "available"=>0
+            ]);
+        } else {
+            if (!is_null($facility) && $facility->available == false) {
+                $facility->update([
+                    "available"=>1
+                ]);
+            }
+        }
+        return  response()->json([
+            'message'=> "toggle status success"  ,
+            'Date'=>$facility->available
+        ]);
+    }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\User;
 
 use App\Class_Public\GeneralTrait;
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -15,7 +16,19 @@ class NotificationController extends Controller
     {
         $this->middleware(["auth:userapi"]);
     }
-
+    public function CountNotRead(): \Illuminate\Http\JsonResponse
+    {
+        try {
+            $user = auth()->user();
+            return response()->json([
+                "count"=> $user->unreadNotifications()->count()
+            ]);
+        }catch (\Exception $exception){
+            return \response()->json([
+                "Error" => $exception->getMessage()
+            ],401);
+        }
+    }
     public function AllRequestWork(Request $request): \Illuminate\Http\JsonResponse
     {
         try {

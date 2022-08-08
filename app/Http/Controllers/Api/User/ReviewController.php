@@ -19,7 +19,8 @@ class ReviewController extends Controller
     use GeneralTrait;
     public function __construct()
     {
-        $this->middleware(["auth:userapi","multi.auth:0"]);
+        $this->middleware(["auth:userapi","multi.auth:0"])->except("ShowReviewAll");
+        $this->middleware(["auth:userapi","multi.auth:0|1"])->only("ShowReviewAll");
     }
 
     /**

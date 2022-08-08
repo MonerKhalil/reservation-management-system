@@ -13,4 +13,5 @@ Route::controller(FacilitiesController::class)->prefix("facility")->group(functi
     Route::delete("deleteOneImage/{id}","deleteOneImage");
     Route::post("addListImage","addListImage");
     Route::post("update","update");
+    Route::post("toggleAvailable","status");
 });

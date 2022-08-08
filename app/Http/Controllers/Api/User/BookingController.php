@@ -20,7 +20,7 @@ class BookingController extends Controller
     use GeneralTrait;
     public function __construct()
     {
-        $this->middleware(["auth:userapi","multi.auth:0"])->except("GetInfoBooking");
+        $this->middleware(["auth:userapi","multi.auth:0"])->except(["GetInfoBooking","CheckBooking"]);
         $this->middleware(["auth:userapi"])->only("GetInfoBooking");
     }
 
@@ -45,12 +45,6 @@ class BookingController extends Controller
                 ->groupBy("facilities.id")
                 ->paginate($this->NumberOfValues($request));
             $facilities = $this->Paginate("infoBookings",$facilities);
-//            foreach ($facilities["infoBookings"] as $item){
-//                $item->photos = DB::table("photos_facility")
-//                    ->select(["photos_facility.id as id_photo","photos_facility.path_photo"])
-//                    ->where("photos_facility.id_facility",$item->id_facility)
-//                    ->get();
-//            }
             return \response()->json($facilities);
         }catch (\Exception $exception){
             return \response()->json([
@@ -113,40 +107,6 @@ class BookingController extends Controller
         }
     }
 
-    public function BookingByTheOwner(Request $request): \Illuminate\Http\JsonResponse
-    {
-        try {
-            $validate = Validator::make($request->all(), [
-                "id_facility" => ["required", Rule::exists("facilities", "id"), "numeric"],
-                "start_date" => ["required","date"],
-                "end_date" => ["required","date"]
-            ]);
-            if($validate->fails()){
-                return response()->json(["Error"=>$validate->errors()]);
-            }
-            $start_date = $request->start_date  ?? null;
-            $end_date =  $request->end_date ?? null;
-            if($start_date!==null&&$end_date!==null){
-                if(!$this->Check_Date($start_date,$end_date)){
-                    Throw new \Exception("The Problem in Date :(");
-                }
-            }
-            $user = auth()->user();
-            $facility = facilities::where("id",$request->id_facility)->where("id_user",$user->id)->first();
-            if(!is_null($facility)){
-
-            }else{
-                Throw new \Exception("Unauthenticated.");
-            }
-            return \response()->json(["Error"=>[
-                "facility" => "The Facility is Not Available Now :("
-            ]]);
-        }catch (\Exception $exception){
-            return \response()->json([
-                "Error" => $exception->getMessage()
-            ], 401);
-        }
-    }
 
     /**
      * @throws \Throwable
@@ -288,7 +248,7 @@ class BookingController extends Controller
             }
     }
 
-    private function CheckBooking($facility,$start_date,$end_date):bool{
+    public function CheckBooking($facility,$start_date,$end_date):bool{
         $bookings_facility = DB::table("bookings")->where("id_facility",$facility->id);
         $count = $bookings_facility->count();
         $test1 = clone $bookings_facility;

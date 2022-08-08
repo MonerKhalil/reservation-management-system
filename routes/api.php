@@ -5,9 +5,10 @@ use Illuminate\Support\Facades\Broadcast;
 //Broadcast::routes(['prefix' => 'api','middleware' => ['auth:userapi']]);
 Broadcast::routes(['prefix' => 'api','middleware' => ["api",'auth:userapi']]);
 
+
 //TEST
 Route::match(["get", "post", "delete"],
-    "test",[\App\Http\Controllers\Api\User\ReportController::class,"ShowReportsAll"]);
+    "test",[\App\Http\Controllers\Api\User\OwnerBookingController::class,"ShowBookingAllOwner"]);
 //
 
 
@@ -45,6 +46,8 @@ require __DIR__ . "\\Route.Private.Project\\"."Facilities\\"."facilities.php";
 require __DIR__ . "\\Route.Private.Project\\"."Facilities\\"."favorite.php";
 
 require __DIR__ . "\\Route.Private.Project\\"."Facilities\\"."booking.php";
+
+require __DIR__ . "\\Route.Private.Project\\"."Facilities\\"."ownerbooking.php";
 
 ############### End Facilities ######################
 
