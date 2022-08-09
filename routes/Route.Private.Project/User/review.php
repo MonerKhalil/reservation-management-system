@@ -5,7 +5,8 @@ use \App\Http\Controllers\Api\User\ReviewController;
 
 
 Route::controller(ReviewController::class)->prefix("user")->group(function (){
-    Route::get("show","ShowReviewAll");
+    Route::get("review/show","ShowReviewAll");
     Route::post("rate","CreateReviewRating");
     Route::post("comment","CreateReviewComment");
+    Route::delete("review/delete","DeleteReview");
 });

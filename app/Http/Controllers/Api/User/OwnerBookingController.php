@@ -6,7 +6,6 @@ use App\Class_Public\GeneralTrait;
 use App\Http\Controllers\Controller;
 use App\Models\bookings;
 use App\Models\facilities;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;

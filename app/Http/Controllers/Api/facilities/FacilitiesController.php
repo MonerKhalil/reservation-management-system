@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\facilities;
 
+use App\Http\Controllers\Api\User\ReportController;
 use App\Http\Controllers\Controller;
 
 use App\Models\facilities;
@@ -21,7 +22,7 @@ class FacilitiesController extends Controller{
         //user=>0
         //admine=>2
         $this->middleware(["auth:userapi","multi.auth:1|2"])->only(["deleteOneImage","addListImage",
-            "delete","store","update","index","deleteAllImage"]);
+            "delete","store","update","index","deleteAllImage","status"]);
         $this->middleware(["auth:userapi"])->only(["show","indexAll"]);
     }
     public  function  indexAll(){
@@ -68,6 +69,7 @@ class FacilitiesController extends Controller{
     }
     public  function  delete($id)
     {
+        $RefundToUser = new ReportController();
         DB::beginTransaction();
         try{
 //            $facility= facilities::where([
@@ -78,6 +80,7 @@ class FacilitiesController extends Controller{
 
             if($facility!=null)
             {
+                $RefundToUser->RefundToUser($facility);
                 $id_photo= $facility->photos;
                 $facility->delete();
                 foreach ($id_photo as $path)
@@ -95,6 +98,7 @@ class FacilitiesController extends Controller{
             return \response()->json([
                 "Error" => $exception->getMessage()
             ],401);
+        } catch (\Throwable $e) {
         }
     }
     public function   store(Request  $request){
@@ -165,6 +169,7 @@ class FacilitiesController extends Controller{
             $facility  ->num_guest=$request->num_guest;
             $facility   ->num_room=$request->num_room;
             $facility   ->id_user=Auth::id();
+            $facility->rate = 1;
             $facility->save();
 
 //                $facility = \auth()->user()->user_facilities()->create([

@@ -28,7 +28,7 @@ class UserNotification extends Notification implements ShouldBroadcast
         $this->body = $body;
         $this->created_at = $created_at;
         $this->data = $data;
-        $this->temp = is_null($this->data) ? []:$this->data->GetAllData();
+        $this->temp = is_null($this->data) ? [] : $this->data->GetAllData();
     }
 
     /**

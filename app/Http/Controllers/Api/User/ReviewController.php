@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\User;
 
+use App\Class_Public\DataInNotifiy;
 use App\Class_Public\GeneralTrait;
 use App\Events\CommentEvent;
 use App\Http\Controllers\Controller;
@@ -9,6 +10,8 @@ use App\Models\facilities;
 use App\Models\Profile;
 use App\Models\review;
 use App\Models\User;
+use App\Notifications\UserNotification;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -20,7 +23,7 @@ class ReviewController extends Controller
     public function __construct()
     {
         $this->middleware(["auth:userapi","multi.auth:0"])->except("ShowReviewAll");
-        $this->middleware(["auth:userapi","multi.auth:0|1"])->only("ShowReviewAll");
+        $this->middleware(["auth:userapi","multi.auth:0|2"])->only("DeleteReview");
     }
 
     /**
@@ -44,9 +47,10 @@ class ReviewController extends Controller
             $reviews = $this->Paginate("reviews",$reviews);
 
             foreach ($reviews["reviews"] as $item){
+                $temp_user = User::where("users.id",$item->id_user)->first();
                 $item->user = [
-                    "name"=>User::where("users.id",$item->id_user)->first()->name,
-                    "path_photo"=>Profile::where("id_user",$item->id_user)->first()->path_photo
+                    "name"=> $temp_user->name ?? null,
+                    "path_photo"=> $temp_user->profile->path_photo ?? null
                     ];
             }
             return \response()->json($reviews);
@@ -97,9 +101,12 @@ class ReviewController extends Controller
         }
     }
 
+    /**
+     * @throws \Throwable
+     */
     public function CreateReviewComment(Request $request): \Illuminate\Http\JsonResponse{
+        DB::beginTransaction();
         try {
-            DB::beginTransaction();
             $user = auth()->user();
             $validate = Validator::make($request->all(),[
                 "id_facility"=>["required","numeric",Rule::exists("facilities","id")],
@@ -110,13 +117,20 @@ class ReviewController extends Controller
                     "Error" => $validate->errors()
                 ],401);
             }
+            $facility = facilities::where("id",$request->id_facility)->first();
+            $owner = User::where("id",$facility->id_user)->first();
             $review = $user->reviews()->where("id_facility",$request->id_facility)->where("id_user",$user->id)->first();
             if(!is_null($review)){
                 $review->update(
                     [
                     "comment"=>$request->comment
                 ]);
+                $header = "Comment facility ".$facility->name;
+                $body = $user->name." has Reviewed the Facility";
+                $body_request = ["id_facility"=>$facility->id];
+                $Data = new DataInNotifiy("/user/review/show",$body_request,"GET");
                 broadcast(new CommentEvent($user->name, $user->profile->path_photo,$review));
+                $owner->notify(new UserNotification($header,"Comment facility", $body,Carbon::now(),$Data));
                 DB::commit();
                 return \response()->json([
                     "review" => $review
@@ -125,6 +139,49 @@ class ReviewController extends Controller
             else{
                 Throw new \Exception("You Dont make Rating");
             }
+        }catch (\Exception $exception){
+            DB::rollBack();
+            return \response()->json([
+                "Error" => $exception->getMessage()
+            ],401);
+        }
+    }
+    public function DeleteReview(Request $request): \Illuminate\Http\JsonResponse
+    {
+        DB::beginTransaction();
+        try {
+            $validate = Validator::make($request->all(),[
+                "id_review"=>["required","numeric",Rule::exists("reviews","id")],
+                "id_facility"=>["required","numeric",Rule::exists("facilities","id")]
+            ]);
+            if($validate->fails()){
+                return \response()->json([
+                    "Error" => $validate->errors()
+                ],401);
+            }
+            $user = auth()->user();
+            $rev = null;
+            if($user->rule==="2"){
+               $rev = review::where("id",$request->id_review)
+                    ->where("id_facility",$request->id_facility)->first();
+               if(is_null($rev)){
+                   Throw new \Exception("The Review is Not Found :(");
+               }
+               $rev->delete();
+            }
+            else{
+                $rev = review::where("id",$request->id_review)
+                    ->where("id_facility",$request->id_facility)->where("id_user",$user->id)->first();
+                if(is_null($rev)){
+                    Throw new \Exception("The Review is Not Found :(");
+                }
+                $rev->delete();
+            }
+            $this->UpdateRateFacility($request->id_facility);
+            DB::commit();
+            return \response()->json([
+                "message" => "Success Delete Reviews"
+            ]);
         }catch (\Exception $exception){
             DB::rollBack();
             return \response()->json([

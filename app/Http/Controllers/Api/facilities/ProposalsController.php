@@ -26,9 +26,25 @@ class ProposalsController extends Controller
                 ->get();
         }
     }
-
+    public function Top5Rate(): \Illuminate\Http\JsonResponse
+    {
+        try {
+            $Facilities = DB::table("facilities")
+                ->orderByDesc("id")
+                ->orderByDesc("rate")
+                ->take(5)
+                ->get();
+            $this->WithPhotos($Facilities);
+            return response()->json($Facilities);
+        }catch (\Exception $exception){
+            return \response()->json([
+                "Error" => $exception->getMessage()
+            ], 401);
+        }
+    }
     public function MostBooked(): \Illuminate\Http\JsonResponse
     {
+        try {
         $Facilities = DB::table("bookings")
             ->selectRaw('COUNT(bookings.id_facility) as NumBooking,facilities.*')
             ->leftJoin('facilities','facilities.id','=','bookings.id_facility')
@@ -38,18 +54,29 @@ class ProposalsController extends Controller
             ->get();
         $this->WithPhotos($Facilities);
         return response()->json($Facilities);
+        }catch (\Exception $exception){
+            return \response()->json([
+                "Error" => $exception->getMessage()
+            ], 401);
+        }
     }
     public function Proposals(Request $request): \Illuminate\Http\JsonResponse
     {
-        if(isEmpty($this->GetIdsFacilitiesAlike())){
-            return $this->MostBooked();
-        }else{
-        $FacilitiesAlike = facilities::whereIn("id",$this->GetIdsFacilitiesAlike())
-             ->orderBy("rate","desc")
-             ->paginate($this->NumberOfValues($request));
-        $FinalAllData = $this->Paginate("facilities",$FacilitiesAlike);
-        $this->WithPhotos($FinalAllData["facilities"]);
-        return response()->json($FinalAllData);
+        try {
+            if(isEmpty($this->GetIdsFacilitiesAlike())){
+                return $this->MostBooked();
+            }else{
+            $FacilitiesAlike = facilities::whereIn("id",$this->GetIdsFacilitiesAlike())
+                 ->orderBy("rate","desc")
+                 ->paginate($this->NumberOfValues($request));
+            $FinalAllData = $this->Paginate("facilities",$FacilitiesAlike);
+            $this->WithPhotos($FinalAllData["facilities"]);
+            return response()->json($FinalAllData);
+            }
+        }catch (\Exception $exception){
+            return \response()->json([
+                "Error" => $exception->getMessage()
+            ], 401);
         }
     }
 

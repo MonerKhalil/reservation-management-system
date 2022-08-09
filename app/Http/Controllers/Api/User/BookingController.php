@@ -144,11 +144,11 @@ class BookingController extends Controller
                 $data = $this->GetJsonFile($this->path_file());
                 $data["countCancel"] += 1 ;
                 $this->UpdateJsonFile($this->path_file(),$data);
-                DB::commit();
                 $header = "unbooking facility ".$facility->name;
                 $body = "This property has already been cancelled ".$user->name;
-                $owner->notify(new UserNotification($header,"UnBooking",$body,Carbon::now()));
-                $user->notify(new UserNotification($header,"UnBooking", "Success UnBooking The Facility :)",Carbon::now()));
+//                $owner->notify(new UserNotification($header,"UnBooking",$body,Carbon::now()));
+//                $user->notify(new UserNotification($header,"UnBooking", "Success UnBooking The Facility :)",Carbon::now()));
+                DB::commit();
                 return \response()->json(["message"=>"Success UnBooking The Facility :)"]);
             }
         }catch (\Exception $exception){
@@ -198,15 +198,15 @@ class BookingController extends Controller
                         "start_date"=>$start_date,
                         "end_date"=>$end_date
                     ]);
-                    DB::commit();
                     $header = "booking facility ".$facility->name;
                     $body = "The facility has been booked by the user ".$user->name;
                     $body_request = ["id_booking"=>$booking->id];
                     $Data = new DataInNotifiy("/bookings/info",$body_request,"GET");
-                    $owner->notify(new UserNotification($header,"Booking",$body,$booking->created_at,$Data
-                    ));
-                    $user->notify(new UserNotification($header,"Booking",
-                        "The property has been booked successfully",$booking->created_at, $Data));
+//                    $owner->notify(new UserNotification($header,"Booking",$body,$booking->created_at,$Data
+//                    ));
+//                    $user->notify(new UserNotification($header,"Booking",
+//                        "The property has been booked successfully",$booking->created_at, $Data));
+                    DB::commit();
                     return \response()->json(["booking"=>$booking]);
                 }else{
                     DB::rollBack();

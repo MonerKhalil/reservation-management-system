@@ -70,7 +70,6 @@ class ProfileController extends Controller
                 if($photo->isValid()){
                     $newPhoto = time().$photo->getClientOriginalName();
                     $newPhoto = 'uploads/Users/'.$newPhoto;
-                    $photo->move('uploads/facility',$newPhoto);
                 }
             }
             auth()->user()->update([
@@ -143,5 +142,10 @@ class ProfileController extends Controller
                 "Error" => $exception->getMessage()
             ],401);
         }
+    }
+    public function ShowProfileOther(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $profile = new UsersController();
+        return $profile->UserProfile($request);
     }
 }

@@ -22,8 +22,8 @@ class ReportController extends Controller
     use GeneralTrait;
     public function __construct()
     {
-        $this->middleware(["auth:userapi","multi.auth:2"])->except("AddReport");
-        $this->middleware(["auth:userapi","multi.auth:0"])->only('AddReport');
+        $this->middleware(["auth:userapi","multi.auth:2"])->except(["RefundToUser","AddReport"]);
+        $this->middleware(["auth:userapi","multi.auth:0"])->only(["RefundToUser",'AddReport']);
     }
 
     /**
@@ -52,7 +52,6 @@ class ReportController extends Controller
                 "id_facility" => $request->id_facility,
                 "report" => $request->report
             ]);
-            DB::commit();
             if($this->CheckIS3Report($facility)){
                 $this->RefundToUser($facility);
                 $header = "Report Facility ".$facility->name;
@@ -65,6 +64,7 @@ class ReportController extends Controller
                 $Data = new DataInNotifiy("/report/info",$body_request,"GET");
                 Notification::send($admins,new UserNotification($header,"Report",$body,Carbon::now(),$Data));
             }
+            DB::commit();
             return response()->json([
                 "report" => $report
             ]);
@@ -149,13 +149,14 @@ class ReportController extends Controller
             $owner = User::where("id",$facility->id_user)->first();
             $bookings = bookings::where("id_facility",$facility->id)->where("start_date",">=",Carbon::now())->get()->toArray();
             $header = "Delete facility ".$facility->name;
-            $body = "Delete facility because 3 Report to users Sorry Done Refund Price";
+            $body = "A booked facility has been deleted from the system, The cost of booking has been added back to your balance";
             foreach ($bookings as $booking){
                 $user = User::where("id",$booking["id_user"])->first();
                 $owner->decrement("amount",$booking["cost"]);
                 $user->increment("amount",$booking["cost"]);
                 $user->notify(new UserNotification($header,"Delete facility", $body,Carbon::now()));
             }
+            $body = "Sorry Your facility has been deleted beacuase the number of reports exceeded 3";
             $owner->notify(new UserNotification($header,"Delete facility",$body,Carbon::now()));
             DB::commit();
             return 1;

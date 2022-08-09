@@ -8,7 +8,7 @@ Broadcast::routes(['prefix' => 'api','middleware' => ["api",'auth:userapi']]);
 
 //TEST
 Route::match(["get", "post", "delete"],
-    "test",[\App\Http\Controllers\Api\User\OwnerBookingController::class,"ShowBookingAllOwner"]);
+    "test",[\App\Http\Controllers\Api\facilities\ProposalsController::class,"Top5Rate"]);
 //
 
 

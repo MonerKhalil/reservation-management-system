@@ -22,7 +22,8 @@ class UsersController extends Controller
 
     public function __construct()
     {
-        $this->middleware(["auth:userapi","multi.auth:2"]);
+        $this->middleware(["auth:userapi","multi.auth:2"])->except("UserProfile");
+        $this->middleware(["auth:userapi"])->only("UserProfile");
     }
 
     public function CountNewAllUsersInLast5Month(): \Illuminate\Http\JsonResponse
