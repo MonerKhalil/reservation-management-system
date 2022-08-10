@@ -3,9 +3,10 @@
 use Illuminate\Support\Facades\Route;
 use \App\Http\Controllers\Api\Admin\{UsersController,FacilitiesController};
 
+Route::get("admin/dashboard/count/all",[UsersController::class,"CountUserOwnerFacInLastNMonth"]);
 
 Route::controller(UsersController::class)->prefix("admin/dashboard/user")->group(function (){
-    Route::get("month","CountNewAllUsersInLast5Month");
+    Route::get("month","CountNewAllUsersInLastNMonth");
     Route::get("count","CountUsersInSystem");
     Route::get("logout","CountUsersLogoutInSystem");
     Route::get("show","ShowUsersAllRule");

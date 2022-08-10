@@ -21,11 +21,11 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
-        'password',
         'amount',
         'rule',"password","status"
     ];
     protected $hidden = [
+        'password',
         "status",
         "created_at",
         "updated_at","email_verified_at"

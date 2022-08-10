@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\User\AuthController;
 use App\Http\Controllers\Api\User\BookingController;
 use App\Http\Controllers\Controller;
 use App\Models\bookings;
+use App\Models\facilities;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -26,22 +27,67 @@ class UsersController extends Controller
         $this->middleware(["auth:userapi"])->only("UserProfile");
     }
 
-    public function CountNewAllUsersInLast5Month(): \Illuminate\Http\JsonResponse
+    public function CountUserOwnerFacInLastNMonth(Request $request){
+        Validator::make($request->all(),[
+            "num"=>["nullable","numeric"],
+        ]);
+        if(!is_numeric($request->num)&&!$request->has("num")){
+            $num = 5;
+        }else{
+            $num = $request->num;
+        }
+        $user = $this->GetCountUsersInMonth("0",$num);
+        $user = $this->ToMonth($user);
+        $owner = $this->GetCountUsersInMonth("1",$num);
+        $owner = $this->ToMonth($owner);
+        $facilities = facilities::select(DB::raw("count(*) as count"),DB::raw("month(created_at) as month"))
+            ->whereYear("created_at",Carbon::now()->year)
+            ->groupBy(DB::raw("month"))
+            ->orderBy("month","desc")
+            ->take($num)
+            ->pluck("count","month");
+        $facilities = $this->ToMonth($facilities);
+        return \response()->json(["users"=>$user,"owners"=>$owner,"facilities"=>$facilities]);
+    }
+    private function GetCountUsersInMonth($rule,$num){
+        $data = User::select(DB::raw("count(*) as count"),DB::raw("month(created_at) as month"))
+            ->whereYear("created_at",Carbon::now()->year)
+            ->where("rule","=",$rule)
+            ->groupBy(DB::raw("month"))
+            ->orderBy("month","desc")
+            ->take($num)
+            ->pluck("count","month");
+        return $data;
+    }
+    private function ToMonth($data){
+        foreach ($data->keys() as $key){
+            $temp = date("F",mktime(0,0,0,$key,1));
+            $data[$temp] = $data[$key];
+            unset($data[$key]);
+        }
+        return $data;
+    }
+
+
+    public function CountNewAllUsersInLastNMonth(Request $request): \Illuminate\Http\JsonResponse
     {
         try {
+            $validate = Validator::make($request->all(),[
+                "num"=>["nullable","numeric"],
+            ]);
+            if(!is_numeric($request->num)&&!$request->has("num")){
+                $num = 5;
+            }else{
+                $num = $request->num;
+            }
             $data = User::select(DB::raw("count(*) as count"),DB::raw("month(created_at) as month"))
                 ->whereYear("created_at",Carbon::now()->year)
                 ->where("rule","!=","2")
                 ->groupBy(DB::raw("month"))
                 ->orderBy("month","desc")
-                ->take(5)
+                ->take($num)
                 ->pluck("count","month");
-            foreach ($data->keys() as $key){
-                $temp = date("F",mktime(0,0,0,$key,1));
-                $data[$temp] = $data[$key];
-                unset($data[$key]);
-            }
-            return \response()->json(["month"=>$data]);
+            return \response()->json(["month"=>$this->ToMonth($data)]);
         } catch (\Exception $exception){
             return \response()->json([
                 "Error" => $exception->getMessage()

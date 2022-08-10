@@ -146,6 +146,28 @@ class ReviewController extends Controller
             ],401);
         }
     }
+    public function GetReview(Request $request): \Illuminate\Http\JsonResponse
+    {
+        try {
+            $user = auth()->user();
+            $validate = Validator::make($request->all(),[
+                "id_facility"=>["required","numeric",Rule::exists("facilities","id")],
+            ]);
+            if($validate->fails()){
+                return \response()->json([
+                    "Error" => $validate->errors()
+                ],401);
+            }
+            $review = $user->reviews()->where("reviews.id_facility",$request->id_facility)->first();
+            return \response()->json([
+                "review" => $review
+            ]);
+        }catch (\Exception $exception){
+            return \response()->json([
+                "Error" => $exception->getMessage()
+            ],401);
+        }
+    }
     public function DeleteReview(Request $request): \Illuminate\Http\JsonResponse
     {
         DB::beginTransaction();

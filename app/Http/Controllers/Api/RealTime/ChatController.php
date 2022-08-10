@@ -95,7 +95,7 @@ class ChatController extends Controller
                 ]);
                 $arr_messages[]=$item["id"];
             }
-            broadcast(new ReadMessageEvent($arr_messages,$request->id_send));
+            //broadcast(new ReadMessageEvent($arr_messages,$request->id_send));
             DB::commit();
             return response()->json(["Success"=>"read messages Done!"]);
         }catch (\Exception $exception){
