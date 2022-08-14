@@ -43,6 +43,7 @@ class ReportController extends Controller
         }
         $user = auth()->user();
         $facility = facilities::where("id",$request->id_facility)->first();
+        $owner = User::where("id",$facility->id_user)->first();
         $admins = User::where("rule","2")->get();
         DB::beginTransaction();
         try {
@@ -57,12 +58,14 @@ class ReportController extends Controller
                 $header = "Report Facility ".$facility->name;
                 $body = "the facility was deleted because the number of reports was equal to 3";
                 Notification::send($admins,new UserNotification($header,"Delete facility",$body,Carbon::now()));
+                $owner->notify(new UserNotification($header,"Delete facility", $body,Carbon::now()));
             }else{
                 $header = "Report Facility ".$facility->name;
                 $body = "The facility has been report by the user : ".$user->name;
                 $body_request = ["id_report"=>$report->id];
                 $Data = new DataInNotifiy("/report/info",$body_request,"GET");
                 Notification::send($admins,new UserNotification($header,"Report",$body,Carbon::now(),$Data));
+                $owner->notify(new UserNotification($header,"Report", $body,Carbon::now()),$Data);
             }
             DB::commit();
             return response()->json([
@@ -97,6 +100,28 @@ class ReportController extends Controller
         }catch (\Exception $exception){
             return response()->json([
             "Error" => $exception->getMessage()
+            ],401);
+        }
+    }
+
+    public function ShowReportsFac(Request $request): \Illuminate\Http\JsonResponse
+    {
+        try {
+            $validator=Validator::make($request->all(),[
+                "id_facility"=>['required',Rule::exists('facilities','id')],
+            ]);
+
+            if($validator->fails()){
+                return response()->json([
+                    'Error'=>$validator->errors()
+                ]);
+            }
+            return response()->json([
+                "report" => reports::where("id_facility",$request->id_facility)->get()
+            ]);
+        }catch (\Exception $exception){
+            return response()->json([
+                "Error" => $exception->getMessage()
             ],401);
         }
     }

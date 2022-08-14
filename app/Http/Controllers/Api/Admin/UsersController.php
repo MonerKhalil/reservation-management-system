@@ -27,7 +27,32 @@ class UsersController extends Controller
         $this->middleware(["auth:userapi"])->only("UserProfile");
     }
 
-    public function CountUserOwnerFacInLastNMonth(Request $request){
+    public function SearchUsersRule(Request $request): \Illuminate\Http\JsonResponse
+    {
+        try {
+            $validate = Validator::make($request->all(),[
+                "num_values" => ["nullable","numeric"],
+                "name" => ["required","string"],
+                "rule"=>["required","string",Rule::in(["0","1"])]
+            ]);
+            if($validate->fails())
+            {
+                return \response()->json([
+                    "Error" => $validate->errors()
+                ],401);
+            }
+            $users = User::where("rule",$request->rule)
+                ->where("name","like","%".$request->name."%")->paginate($request->num_values);
+            return response()->json($this->Paginate("users",$users));
+        }catch (\Exception $exception){
+                return \response()->json([
+                    "Error" => $exception->getMessage()
+                ],401);
+            }
+    }
+
+    public function CountUserOwnerFacInLastNMonth(Request $request): \Illuminate\Http\JsonResponse
+    {
         Validator::make($request->all(),[
             "num"=>["nullable","numeric"],
         ]);
@@ -49,6 +74,7 @@ class UsersController extends Controller
         $facilities = $this->ToMonth($facilities);
         return \response()->json(["users"=>$user,"owners"=>$owner,"facilities"=>$facilities]);
     }
+
     private function GetCountUsersInMonth($rule,$num){
         $data = User::select(DB::raw("count(*) as count"),DB::raw("month(created_at) as month"))
             ->whereYear("created_at",Carbon::now()->year)
@@ -59,6 +85,7 @@ class UsersController extends Controller
             ->pluck("count","month");
         return $data;
     }
+
     private function ToMonth($data){
         foreach ($data->keys() as $key){
             $temp = date("F",mktime(0,0,0,$key,1));
@@ -252,6 +279,7 @@ class UsersController extends Controller
             $user->tokens()->delete();
             $user->delete();
             if($path!==null){
+                if($path!=="uploads/Users/defult_profile.png")
                 unlink($path);
             }
             DB::commit();

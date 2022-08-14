@@ -133,30 +133,32 @@ class BookingController extends Controller
             $owner = User::where("id",$facility->id_user)->first();
             $time = round(abs(strtotime(Carbon::now()) - strtotime($booking->created_at))/86400);
             if($time > 1){
-                return \response()->json(["Error"=>[
-                    "facility" => "You Can't UnBooking because The time limit for the cancellation process has been broken :("
-                ]]);
+                $Discount = (float) ($booking->cost - ($booking->cost * (0.25)));
+                $this->HelpFunUnBooking($user,$owner,$Discount,$facility,$booking);
             }
             else{
-                $owner->decrement("amount",$booking->cost);
-                $user->increment("amount",$booking->cost);
-                $booking->delete();
-                $data = $this->GetJsonFile($this->path_file());
-                $data["countCancel"] += 1 ;
-                $this->UpdateJsonFile($this->path_file(),$data);
-                $header = "unbooking facility ".$facility->name;
-                $body = "This property has already been cancelled ".$user->name;
-//                $owner->notify(new UserNotification($header,"UnBooking",$body,Carbon::now()));
-//                $user->notify(new UserNotification($header,"UnBooking", "Success UnBooking The Facility :)",Carbon::now()));
-                DB::commit();
-                return \response()->json(["message"=>"Success UnBooking The Facility :)"]);
+                $this->HelpFunUnBooking($user,$owner,$booking->cost,$facility,$booking);
             }
+            DB::commit();
+            return \response()->json(["message"=>"Success UnBooking The Facility :)"]);
         }catch (\Exception $exception){
             DB::rollBack();
             return \response()->json([
                 "Error" => $exception->getMessage()
             ], 401);
         }
+    }
+    private function HelpFunUnBooking($user,$owner,$cost,$facility,$booking){
+        $owner->decrement("amount",$cost);
+        $user->increment("amount",$cost);
+        $booking->delete();
+        $data = $this->GetJsonFile($this->path_file());
+        $data["countCancel"] += 1 ;
+        $this->UpdateJsonFile($this->path_file(),$data);
+        $header = "unbooking facility ".$facility->name;
+        $body = "This property has already been cancelled ".$user->name;
+        $owner->notify(new UserNotification($header,"UnBooking",$body,Carbon::now()));
+        $user->notify(new UserNotification($header,"UnBooking", "Success UnBooking The Facility :)",Carbon::now()));
     }
 
     public function Booking(Request $request): \Illuminate\Http\JsonResponse
@@ -209,10 +211,10 @@ class BookingController extends Controller
                     $body = "The facility has been booked by the user ".$user->name;
                     $body_request = ["id_booking"=>$booking->id];
                     $Data = new DataInNotifiy("/bookings/info",$body_request,"GET");
-//                    $owner->notify(new UserNotification($header,"Booking",$body,$booking->created_at,$Data
-//                    ));
-//                    $user->notify(new UserNotification($header,"Booking",
-//                        "The property has been booked successfully",$booking->created_at, $Data));
+                    $owner->notify(new UserNotification($header,"Booking",$body,$booking->created_at,$Data
+                    ));
+                    $user->notify(new UserNotification($header,"Booking",
+                        "The property has been booked successfully",$booking->created_at, $Data));
                     DB::commit();
                     return \response()->json(["booking"=>$booking]);
                 }else{

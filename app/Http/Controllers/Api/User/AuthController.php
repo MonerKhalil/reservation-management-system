@@ -80,6 +80,7 @@ class AuthController extends Controller
         {
             $token = $user->createToken($user->name,["*"])->plainTextToken;
             $temp = clone $user;
+            $this->UpdateAvailableFacilitiesOwner($user,true);
             return response(["user"=>$user,
                 "path_photo"=>$temp->profile->path_photo??null,
                 "token"=>$token
@@ -98,10 +99,18 @@ class AuthController extends Controller
             $data = $this->GetJsonFile($this->path_file());
             $data["countLogout"] += 1 ;
             $this->UpdateJsonFile($this->path_file(),$data);
+            $this->UpdateAvailableFacilitiesOwner($user,false);
             return response()->json(["Message"=>"Successfully logged out"],201);
         }catch (\Exception $exception){
             return response()->json([
                 "Error"=> $exception->getMessage()
+            ]);
+        }
+    }
+    private function UpdateAvailableFacilitiesOwner($user,$available){
+        if($user->rule==="1"){
+            $user->user_facilities()->update([
+                "available" => $available
             ]);
         }
     }

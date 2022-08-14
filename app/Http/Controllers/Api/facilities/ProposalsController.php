@@ -63,16 +63,17 @@ class ProposalsController extends Controller
     public function Proposals(Request $request): \Illuminate\Http\JsonResponse
     {
         try {
-            if(isEmpty($this->GetIdsFacilitiesAlike())){
-                return $this->MostBooked();
-            }else{
+            $ids = [];
+            foreach ($this->MostBooked()->getData() as $item){
+                $ids[]=$item->id;
+            }
             $FacilitiesAlike = facilities::whereIn("id",$this->GetIdsFacilitiesAlike())
+                 ->orWhereIn("id",$ids)
                  ->orderBy("rate","desc")
                  ->paginate($this->NumberOfValues($request));
             $FinalAllData = $this->Paginate("facilities",$FacilitiesAlike);
             $this->WithPhotos($FinalAllData["facilities"]);
             return response()->json($FinalAllData);
-            }
         }catch (\Exception $exception){
             return \response()->json([
                 "Error" => $exception->getMessage()

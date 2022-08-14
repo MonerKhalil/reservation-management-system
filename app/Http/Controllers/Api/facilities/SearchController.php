@@ -17,7 +17,8 @@ class SearchController extends Controller
 
     public function __construct(){
         $this->facilities = DB::table("facilities")
-            ->select()->where("available",true);
+            ->select();
+//
     }
     /**
      * @throws \Illuminate\Validation\ValidationException
@@ -37,6 +38,7 @@ class SearchController extends Controller
         }
         try {
         $this->num_values = $this->NumberOfValues($request);
+        $this->facilities = $this->Available();
         $this->facilities = $this->Location($request);
         $this->facilities = $this->Type($request);
         $this->facilities = $this->Cost($request);
@@ -97,6 +99,21 @@ class SearchController extends Controller
             "start_date" => ["nullable","date"],
             "end_date" => ["nullable","date"]
         ]);
+    }
+
+    public function Available(): \Illuminate\Database\Query\Builder
+    {
+        if(!is_null(auth("userapi")->user())){
+                echo "maksm";
+            if(auth("userapi")->user()->rule!=="2"){
+                return $this->facilities->where("available",true);
+            }
+            else
+            {
+                return $this->facilities;
+            }
+        }
+        return $this->facilities->where("available",true);
     }
 
     public function Order(Request $request)

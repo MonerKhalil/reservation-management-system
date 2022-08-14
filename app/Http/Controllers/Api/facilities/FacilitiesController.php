@@ -72,12 +72,25 @@ class FacilitiesController extends Controller{
         $RefundToUser = new ReportController();
         DB::beginTransaction();
         try{
-//            $facility= facilities::where([
-//                "id"=>$id,
-//                "id_user"=>Auth::id()]);
-//             dd($facility->id);
-            $facility= Auth::user()->user_facilities()->where("id",$id)->first();
+            $user = auth()->user()->rule;
+            if($user==="2"){
+                $facility= facilities::where(["id"=>$id,]);
+                if($facility!=null)
+                {
+                    $id_photo= $facility->photos;
+                    $facility->delete();
+                    foreach ($id_photo as $path)
+                    {
+                        unlink($path->path_photo);
+                    }
+                    DB::commit();
+                    return response(['message'=>'facility deleted successfully']);
+                }else{
+                    return response(['message'=>'facility not found']);
+                }
 
+            }else{
+            $facility= Auth::user()->user_facilities()->where("id",$id)->first();
             if($facility!=null)
             {
                 $RefundToUser->RefundToUser($facility);
@@ -92,6 +105,7 @@ class FacilitiesController extends Controller{
             }else{
                 return response(['message'=>'facility not found']);
 
+            }
             }
         }catch  (\Exception $exception){
             DB::rollback();

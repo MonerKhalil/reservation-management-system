@@ -56,7 +56,7 @@ class ProfileController extends Controller
                 "password" => ["nullable","min:8"],
                 "gender" => ["nullable",Rule::in(["female","male"])],
                 "path_photo" => ["nullable",'mimes:jpeg,png,jpg'],
-                "age" => ["nullable","date"],
+                "age" => ["nullable","numeric","min:15","max:90"],
                 "phone" => ["nullable","min:10","regex:/^[0-9]+$/"]
             ]);
             if($validate->fails())
@@ -121,7 +121,7 @@ class ProfileController extends Controller
         $path = null;
         DB::beginTransaction();
         try {
-            $user = User::all()->where("id",auth()->id())->first();
+            $user = auth()->user();
             if($user!==null){
                 if( $user->profile!==null ){
                     $path = $user->profile->path_photo??null;

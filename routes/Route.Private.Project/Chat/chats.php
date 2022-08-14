@@ -13,5 +13,5 @@ Route::controller(ChatController::class)->prefix("chat")->group(function (){
     Route::post("send","send_message");
     Route::post("read","read_message");
     Route::delete("delete_messages","delete_messages");
-    Route::delete("destroy_chats","destroy_chats");
+    Route::delete("destroy_chats","destroy_chats");//58 5
 });

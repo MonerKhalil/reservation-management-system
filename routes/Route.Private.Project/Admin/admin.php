@@ -6,6 +6,7 @@ use \App\Http\Controllers\Api\Admin\{UsersController,FacilitiesController};
 Route::get("admin/dashboard/count/all",[UsersController::class,"CountUserOwnerFacInLastNMonth"]);
 
 Route::controller(UsersController::class)->prefix("admin/dashboard/user")->group(function (){
+    Route::get("search","SearchUsersRule");
     Route::get("month","CountNewAllUsersInLastNMonth");
     Route::get("count","CountUsersInSystem");
     Route::get("logout","CountUsersLogoutInSystem");
