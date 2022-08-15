@@ -53,7 +53,6 @@ class ProposalsController extends Controller
                     ->take(5)
                     ->get();
             }
-
             $this->WithPhotos($Facilities);
             return response()->json($Facilities);
         }catch (\Exception $exception){

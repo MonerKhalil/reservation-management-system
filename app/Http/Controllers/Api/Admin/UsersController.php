@@ -273,6 +273,7 @@ class UsersController extends Controller
             }
             $user = User::all()->where("id",$request->id)->first();
             if($user->rule==="2"){
+                DB::rollBack();
                 throw new \Exception("the user is admin");
             }
             if($user!==null){
@@ -280,26 +281,35 @@ class UsersController extends Controller
                     $path = $user->profile->path_photo??null;
                 }
                 if($user->rule==="1"){
+                    echo "dkmdskmsdkmsdk\n";
                     $facilities = facilities::where("id_user",$user->id)->select("id")->get()->toArray();
-                    if(!isEmpty($facilities)){
-                        foreach ($facilities as $item){
-                            $facility = facilities::where("id",$item["id"])->first();
-                            $this->RefundToUser($facility);
+                    echo count($facilities)."\n";
+                    foreach ($facilities as $item){
+                        echo "sdkmdsk\n";
+                        $facility = facilities::where("id",$item["id"])->first();
+                        $Temp = $this->RefundToUser($facility);
+                        if($Temp!==1){
+                            DB::rollBack();
+                            Throw new \Exception($Temp);
                         }
                     }
                 }
-            }
-            $user->tokens()->delete();
-            $user->delete();
-            if($path!==null){
-                if($path!==$this->NameImage_DefultPath()){
-                    unlink(public_path($path));
+                $user->tokens()->delete();
+                $user->delete();
+                if($path!==null){
+                    if($path!==$this->NameImage_DefultPath()){
+                        unlink(public_path($path));
+                    }
                 }
+                DB::commit();
+                return \response()->json([
+                    "Message" => "Successfully Deleted User"
+                ]);
             }
-            DB::commit();
-            return \response()->json([
-                "Message" => "Successfully Deleted User"
-            ]);
+            else{
+                DB::rollBack();
+                throw new \Exception("the user is not Exists");
+            }
         }catch (\Exception $exception){
             DB::rollBack();
             return \response()->json([
@@ -340,6 +350,7 @@ class UsersController extends Controller
                     "Error" => $validate->errors()
                 ],401);
             }
+            $password = $request->password;
             $profile = $user->profile;
             $newPhoto = null;
             $photo = $request->file("path_photo") ?? null;
@@ -349,11 +360,11 @@ class UsersController extends Controller
                     $newPhoto = 'uploads/Users/'.$newPhoto;
                 }
             }
-            $password = null;
-            if(is_null($request->password)){
+            if(is_null($password)){
                 $password = $user->password;
-            }else{
-                $password = password_hash($request->password,PASSWORD_DEFAULT);
+            }
+            else{
+                $password = password_hash($password,PASSWORD_DEFAULT);
             }
             $user->update([
                 "name" => $request->name ?? $user->name,

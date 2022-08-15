@@ -65,6 +65,7 @@ class ProfileController extends Controller
                     "Error" => $validate->errors()
                 ],401);
             }
+            $password = $request->password;
             $photo = $request->file("path_photo") ?? null;
             if($photo !==null){
                 if($photo->isValid()){
@@ -72,11 +73,11 @@ class ProfileController extends Controller
                     $newPhoto = 'uploads/Users/'.$newPhoto;
                 }
             }
-            $password = null;
-            if(is_null($request->password)){
+            if(is_null($password)){
                 $password = $user->password;
-            }else{
-                $password = password_hash($request->password,PASSWORD_DEFAULT);
+            }
+            else{
+                $password = password_hash($password,PASSWORD_DEFAULT);
             }
             auth()->user()->update([
                 "name" => $request->name ?? $user->name,
@@ -117,9 +118,7 @@ class ProfileController extends Controller
                 "Error" => $exception->getMessage()
             ],401);
         }
-//$DATAUser->getData()->user->id
     }
-
     /**
      * @throws \Throwable
      */
@@ -150,6 +149,7 @@ class ProfileController extends Controller
             ],401);
         }
     }
+
     public function ShowProfileOther(Request $request): \Illuminate\Http\JsonResponse
     {
         $profile = new UsersController();

@@ -73,11 +73,13 @@ class FacilitiesController extends Controller{
         try{
             $user = auth()->user()->rule;
             if($user==="2"){
-                echo "asmsakmsak";
                 $facility = facilities::where(["id"=>$id])->first();
                 if($facility!=null)
                 {
-                    $this->RefundToUser($facility);
+                    $Temp = $this->RefundToUser($facility);
+                    if($Temp!==1){
+                        Throw new \Exception($Temp);
+                    }
                     $id_photo= $facility->photos;
                     $facility->delete();
                     foreach ($id_photo as $path)

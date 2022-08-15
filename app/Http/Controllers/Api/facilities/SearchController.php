@@ -39,6 +39,7 @@ class SearchController extends Controller
         try {
         $this->num_values = $this->NumberOfValues($request);
         $this->facilities = $this->Available();
+        $this->facilities = $this->Name_Fac($request);
         $this->facilities = $this->Location($request);
         $this->facilities = $this->Type($request);
         $this->facilities = $this->Cost($request);
@@ -82,6 +83,7 @@ class SearchController extends Controller
             "num_values" => ["nullable","numeric"],
             //order : id ,rate, cost,num_guest,num_room
             "order" =>["nullable","string"],
+            "name" => ["nullable","string"],
             "location" => ["nullable","string"],
             "type" => ["nullable","array",Rule::in(["hostel","chalet","farmer"])],
             "cost" => ["nullable","numeric"],
@@ -100,11 +102,18 @@ class SearchController extends Controller
             "end_date" => ["nullable","date"]
         ]);
     }
-
+    public function Name_Fac(Request $request): \Illuminate\Database\Query\Builder
+    {
+        $name = $request->name??null;
+        $test = clone $this->facilities;
+        if($name!==null){
+            return $test->where("facilities.name","like","%".$name."%");
+        }
+        return $this->facilities;
+    }
     public function Available(): \Illuminate\Database\Query\Builder
     {
         if(!is_null(auth("userapi")->user())){
-                echo "maksm";
             if(auth("userapi")->user()->rule!=="2"){
                 return $this->facilities->where("available",true);
             }

@@ -53,19 +53,23 @@ class ReportController extends Controller
                 "id_facility" => $request->id_facility,
                 "report" => $request->report
             ]);
-            if($this->CheckIS3Report($facility)){
-                $this->RefundToUser($facility);
-                $header = "Report Facility ".$facility->name;
+            $header = "Report Facility ".$facility->name;
+            $Test = $this->CheckIS3Report($facility);
+            if($Test===1){
+                echo "11\n";
                 $body = "the facility was deleted because the number of reports was equal to 3";
                 Notification::send($admins,new UserNotification($header,"Delete facility",$body,Carbon::now()));
                 $owner->notify(new UserNotification($header,"Delete facility", $body,Carbon::now()));
-            }else{
-                $header = "Report Facility ".$facility->name;
+            }
+            else if ($Test===0){
+                echo "00\n";
                 $body = "The facility has been report by the user : ".$user->name;
                 $body_request = ["id_report"=>$report->id];
                 $Data = new DataInNotifiy("/report/info",$body_request,"GET");
                 Notification::send($admins,new UserNotification($header,"Report",$body,Carbon::now(),$Data));
                 $owner->notify(new UserNotification($header,"Report", $body,Carbon::now()),$Data);
+            }else{
+                Throw new \Exception($Test);
             }
             DB::commit();
             return response()->json([
@@ -165,19 +169,34 @@ class ReportController extends Controller
         }
     }
 
-    private function CheckIS3Report($facility): bool
+    /**
+     * @throws \Throwable
+     */
+    private function CheckIS3Report($facility)
     {
-        $count = reports::where("id_facility",$facility->id)->count("id");
-        if ($count >= 3){
-            $photos = $facility->photos;
-            $facility->delete();
-            foreach ($photos as $photo)
-            {
-                unlink($photo->path_photo);
+        DB::beginTransaction();
+        try {
+            $count = reports::where("id_facility",$facility->id)->count("id");
+            if ($count >= 3){
+                $photos = $facility->photos;
+                $Temp = $this->RefundToUser($facility);
+                if($Temp!==1){
+                    Throw new \Exception($Temp);
+                }
+                $facility->delete();
+                foreach ($photos as $photo)
+                {
+                    unlink($photo->path_photo);
+                }
+                DB::commit();
+                return 1;
             }
-            return true;
+            DB::commit();
+            return 0;
+        }catch (\Exception $exception){
+            DB::rollBack();
+            return  $exception->getMessage();
         }
-        return false;
     }
 
     private function CheckBooking(int $iduser,int $idfacility): bool

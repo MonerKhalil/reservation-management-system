@@ -53,7 +53,7 @@ trait GeneralTrait
     public function RefundToUser($facility){
         DB::beginTransaction();
         try {
-            echo "sakmaskmaksamks";
+            echo "sakmaskmaksamks\n";
             $owner = User::where("id",$facility->id_user)->first();
             $bookings = bookings::where("id_facility",$facility->id)->where("start_date",">",Carbon::now())->get()->toArray();
             $header = "Delete facility ".$facility->name;
@@ -70,9 +70,7 @@ trait GeneralTrait
             return 1;
         }catch (\Exception $exception){
             DB::rollBack();
-            return response()->json([
-                "Error" => $exception->getMessage()
-            ],401);
+            return $exception->getMessage();
         }
     }
 

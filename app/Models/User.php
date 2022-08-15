@@ -25,7 +25,6 @@ class User extends Authenticatable
         'rule',"password","status"
     ];
     protected $hidden = [
-        'password',
         "status",
         "created_at",
         "updated_at","email_verified_at"
