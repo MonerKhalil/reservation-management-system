@@ -72,11 +72,18 @@ class ProfileController extends Controller
                     $newPhoto = 'uploads/Users/'.$newPhoto;
                 }
             }
+            $password = null;
+            if(is_null($request->password)){
+                $password = $user->password;
+            }else{
+                $password = password_hash($request->password,PASSWORD_DEFAULT);
+            }
             auth()->user()->update([
                 "name" => $request->name ?? $user->name,
                 "email" => $request->email ?? $user->email,
-                "password" => password_hash($request->password,PASSWORD_DEFAULT) ?? $user->password,
+                "password" => $password
             ]);
+
             if($profile!==null){
                 if($newPhoto!==null&&$profile->path_photo!==null){
                     unlink($profile->path_photo);

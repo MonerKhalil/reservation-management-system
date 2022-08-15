@@ -76,18 +76,23 @@ class AuthController extends Controller
             ],401);
         }
         $user = User::where("email",$request->email)->first();
-        if($user && password_verify($request->password,$user->password))
+        if(!is_null($user))
         {
-            $token = $user->createToken($user->name,["*"])->plainTextToken;
-            $temp = clone $user;
-            $this->UpdateAvailableFacilitiesOwner($user,true);
-            return response(["user"=>$user,
-                "path_photo"=>$temp->profile->path_photo??null,
-                "token"=>$token
-            ],201);
+            if (password_verify($request->password,$user->password)){
+                $token = $user->createToken($user->name,["*"])->plainTextToken;
+                $temp = clone $user;
+                $this->UpdateAvailableFacilitiesOwner($user,true);
+                return response(["user"=>$user,
+                    "path_photo"=>$temp->profile->path_photo??null,
+                    "token"=>$token
+                ],201);
+            }
+            else{
+                return response(["Error"=>["password"=>["password is error!!"]]],401);
+            }
         }
         else{
-            return response(["Error"=>["password"=>["password is error!!"]]],401);
+            return response(["Error"=>"the User is not exists",401]);
         }
     }
 
@@ -99,7 +104,7 @@ class AuthController extends Controller
             $data = $this->GetJsonFile($this->path_file());
             $data["countLogout"] += 1 ;
             $this->UpdateJsonFile($this->path_file(),$data);
-            $this->UpdateAvailableFacilitiesOwner($user,false);
+            //$this->UpdateAvailableFacilitiesOwner($user,false);
             return response()->json(["Message"=>"Successfully logged out"],201);
         }catch (\Exception $exception){
             return response()->json([

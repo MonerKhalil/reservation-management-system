@@ -165,34 +165,6 @@ class ReportController extends Controller
         }
     }
 
-    /**
-     * @throws \Throwable
-     */
-    public function RefundToUser($facility){
-        DB::beginTransaction();
-        try {
-            $owner = User::where("id",$facility->id_user)->first();
-            $bookings = bookings::where("id_facility",$facility->id)->where("start_date",">=",Carbon::now())->get()->toArray();
-            $header = "Delete facility ".$facility->name;
-            $body = "A booked facility has been deleted from the system, The cost of booking has been added back to your balance";
-            foreach ($bookings as $booking){
-                $user = User::where("id",$booking["id_user"])->first();
-                $owner->decrement("amount",$booking["cost"]);
-                $user->increment("amount",$booking["cost"]);
-                $user->notify(new UserNotification($header,"Delete facility", $body,Carbon::now()));
-            }
-            $body = "Sorry Your facility has been deleted beacuase the number of reports exceeded 3";
-            $owner->notify(new UserNotification($header,"Delete facility",$body,Carbon::now()));
-            DB::commit();
-            return 1;
-        }catch (\Exception $exception){
-            DB::rollBack();
-            return response()->json([
-            "Error" => $exception->getMessage()
-            ],401);
-        }
-    }
-
     private function CheckIS3Report($facility): bool
     {
         $count = reports::where("id_facility",$facility->id)->count("id");

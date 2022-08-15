@@ -4,6 +4,7 @@ namespace App\Class_Public;
 
 use App\Models\bookings;
 use App\Models\User;
+use App\Notifications\UserNotification;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -12,6 +13,10 @@ use phpDocumentor\Reflection\DocBlock\Tags\Throws;
 
 trait GeneralTrait
 {
+    public function NameImage_DefultPath():string{
+        return "uploads/Users/defult_profile.png";
+    }
+
     public function path_file (): string
     {
         return storage_path("app\\public\\TempCountsUsers.json");
@@ -42,12 +47,32 @@ trait GeneralTrait
         }
     }
 
-    public function CheckAreBookingToFacility($id_fac){
-
-        $bookings = bookings::where("id_facility",$id_fac)->where("start_date",">=",Carbon::now())->get();
-        $users = [];
-        foreach ($bookings as $booking){
-
+    /**
+     * @throws \Throwable
+     */
+    public function RefundToUser($facility){
+        DB::beginTransaction();
+        try {
+            echo "sakmaskmaksamks";
+            $owner = User::where("id",$facility->id_user)->first();
+            $bookings = bookings::where("id_facility",$facility->id)->where("start_date",">",Carbon::now())->get()->toArray();
+            $header = "Delete facility ".$facility->name;
+            $body = "A booked facility has been deleted from the system, The cost of booking has been added back to your balance";
+            foreach ($bookings as $booking){
+                $user = User::where("id",$booking["id_user"])->first();
+                $owner->decrement("amount",$booking["cost"]);
+                $user->increment("amount",$booking["cost"]);
+                $user->notify(new UserNotification($header,"Delete facility", $body,Carbon::now()));
+            }
+            $body = "Sorry Your facility has been deleted beacuase the number of reports exceeded 3";
+            $owner->notify(new UserNotification($header,"Delete facility",$body,Carbon::now()));
+            DB::commit();
+            return 1;
+        }catch (\Exception $exception){
+            DB::rollBack();
+            return response()->json([
+                "Error" => $exception->getMessage()
+            ],401);
         }
     }
 

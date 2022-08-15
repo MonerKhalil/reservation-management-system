@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use function PHPUnit\Framework\isEmpty;
 
 class UsersController extends Controller
 {
@@ -41,7 +42,7 @@ class UsersController extends Controller
                     "Error" => $validate->errors()
                 ],401);
             }
-            $users = User::where("rule",$request->rule)
+            $users = User::with("profile")->where("rule",$request->rule)
                 ->where("name","like","%".$request->name."%")->paginate($request->num_values);
             return response()->json($this->Paginate("users",$users));
         }catch (\Exception $exception){
@@ -253,6 +254,9 @@ class UsersController extends Controller
         return $test->register($request);
     }
 
+    /**
+     * @throws \Throwable
+     */
     public function DeleteUser(Request $request): \Illuminate\Http\JsonResponse
     {
         $path = null;
@@ -275,12 +279,22 @@ class UsersController extends Controller
                 if( $user->profile!==null){
                     $path = $user->profile->path_photo??null;
                 }
+                if($user->rule==="1"){
+                    $facilities = facilities::where("id_user",$user->id)->select("id")->get()->toArray();
+                    if(!isEmpty($facilities)){
+                        foreach ($facilities as $item){
+                            $facility = facilities::where("id",$item["id"])->first();
+                            $this->RefundToUser($facility);
+                        }
+                    }
+                }
             }
             $user->tokens()->delete();
             $user->delete();
             if($path!==null){
-                if($path!=="uploads/Users/defult_profile.png")
-                unlink($path);
+                if($path!==$this->NameImage_DefultPath()){
+                    unlink(public_path($path));
+                }
             }
             DB::commit();
             return \response()->json([
@@ -335,10 +349,16 @@ class UsersController extends Controller
                     $newPhoto = 'uploads/Users/'.$newPhoto;
                 }
             }
+            $password = null;
+            if(is_null($request->password)){
+                $password = $user->password;
+            }else{
+                $password = password_hash($request->password,PASSWORD_DEFAULT);
+            }
             $user->update([
                 "name" => $request->name ?? $user->name,
                 "email" => $request->email ?? $user->email,
-                "password" => password_hash($request->password,PASSWORD_DEFAULT) ?? $user->password,
+                "password" => $password,
             ]);
             if($profile!==null){
                 if($newPhoto!==null&&$profile->path_photo!==null){

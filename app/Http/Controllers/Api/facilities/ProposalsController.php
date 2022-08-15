@@ -8,6 +8,8 @@ use App\Models\bookings;
 use App\Models\facilities;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use function PHPUnit\Framework\isEmpty;
 
 class ProposalsController extends Controller
@@ -26,14 +28,32 @@ class ProposalsController extends Controller
                 ->get();
         }
     }
-    public function Top5Rate(): \Illuminate\Http\JsonResponse
+    public function Top5Rate(Request $request): \Illuminate\Http\JsonResponse
     {
         try {
-            $Facilities = DB::table("facilities")
-                ->orderByDesc("id")
-                ->orderByDesc("rate")
-                ->take(5)
-                ->get();
+            $validate = Validator::make($request->all(),[
+                "type" => ["nullable","array",Rule::in(["hostel","chalet","farmer"])],
+            ]);
+            if($validate->fails())
+            {
+                return \response()->json([
+                    "Error" => $validate->errors()
+                ],401);
+            }
+            if(is_null($request->type)){
+                $Facilities = DB::table("facilities")
+                    ->orderByDesc("rate")
+                    ->take(5)
+                    ->get();
+            }
+            else{
+                $Facilities = DB::table("facilities")
+                    ->where("type",$request->type)
+                    ->orderByDesc("rate")
+                    ->take(5)
+                    ->get();
+            }
+
             $this->WithPhotos($Facilities);
             return response()->json($Facilities);
         }catch (\Exception $exception){

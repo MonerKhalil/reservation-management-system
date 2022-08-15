@@ -7,6 +7,8 @@ use App\Class_Public\GeneralTrait;
 use App\Http\Controllers\Controller;
 use App\Models\bookings;
 use App\Models\facilities;
+use App\Models\Profile;
+use App\Models\User;
 use App\Notifications\UserNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -88,7 +90,11 @@ class OwnerBookingController extends Controller
             if(!is_null($facility)){
             $bookings = bookings::where("id_facility",$facility->id)
                 ->paginate($this->NumberOfValues($request));
-            return response()->json($this->Paginate("bookings",$bookings));
+                $final = $this->Paginate("bookings",$bookings);
+                foreach ($final["bookings"] as $item){
+                    $item->profile = $this->GetProfile($item["id_user"]);
+                }
+                return response()->json($final);
             }
             else{
                 Throw new \Exception("the facility is not included in this owner facilities");
@@ -106,12 +112,20 @@ class OwnerBookingController extends Controller
         try {
             $id_facilities = auth()->user()->user_facilities()->select("facilities.id as id")->get()->toArray();
             $bookings = bookings::whereIn("id_facility",$id_facilities)->paginate($this->NumberOfValues($request));
-            return response()->json($this->Paginate("bookings",$bookings));
+            $final = $this->Paginate("bookings",$bookings);
+            foreach ($final["bookings"] as $item){
+                 $item->profile = $this->GetProfile($item["id_user"]);
+            }
+            return response()->json($final);
         }catch (\Exception $exception){
             return response()->json([
                 "Error" => $exception->getMessage()
             ],401);
         }
+    }
+    private function GetProfile($id){
+        $user = User::with("profile")->where("id",$id)->first();
+        return $user;
     }
 
 }

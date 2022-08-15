@@ -20,10 +20,10 @@ class BookingController extends Controller
     use GeneralTrait;
     public function __construct()
     {
-        $this->middleware(["auth:userapi","multi.auth:0"])->except(["GetInfoBooking","CheckBooking"]);
+        $this->middleware(["auth:userapi","multi.auth:0"])->except(["GetInfoBooking","CheckBooking","DatesNotAvailable"]);
+        $this->middleware(["auth:userapi","multi.auth:0|1"])->only(["DatesNotAvailable"]);
         $this->middleware(["auth:userapi"])->only("GetInfoBooking");
     }
-
 
     public function Display_Booking(Request $request): \Illuminate\Http\JsonResponse
     {

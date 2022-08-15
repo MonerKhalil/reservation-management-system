@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Api\facilities;
 
-use App\Http\Controllers\Api\User\ReportController;
+use App\Class_Public\GeneralTrait;
 use App\Http\Controllers\Controller;
 
 use App\Models\facilities;
@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
 class FacilitiesController extends Controller{
-
+    use GeneralTrait;
 
     public function __construct()
     {
@@ -69,14 +69,15 @@ class FacilitiesController extends Controller{
     }
     public  function  delete($id)
     {
-        $RefundToUser = new ReportController();
         DB::beginTransaction();
         try{
             $user = auth()->user()->rule;
             if($user==="2"){
-                $facility= facilities::where(["id"=>$id,]);
+                echo "asmsakmsak";
+                $facility = facilities::where(["id"=>$id])->first();
                 if($facility!=null)
                 {
+                    $this->RefundToUser($facility);
                     $id_photo= $facility->photos;
                     $facility->delete();
                     foreach ($id_photo as $path)
@@ -86,6 +87,7 @@ class FacilitiesController extends Controller{
                     DB::commit();
                     return response(['message'=>'facility deleted successfully']);
                 }else{
+                    DB::rollback();
                     return response(['message'=>'facility not found']);
                 }
 
@@ -93,7 +95,7 @@ class FacilitiesController extends Controller{
             $facility= Auth::user()->user_facilities()->where("id",$id)->first();
             if($facility!=null)
             {
-                $RefundToUser->RefundToUser($facility);
+                $this->RefundToUser($facility);
                 $id_photo= $facility->photos;
                 $facility->delete();
                 foreach ($id_photo as $path)
@@ -103,8 +105,8 @@ class FacilitiesController extends Controller{
                 DB::commit();
                 return response(['message'=>'facility deleted successfully']);
             }else{
+                DB::rollback();
                 return response(['message'=>'facility not found']);
-
             }
             }
         }catch  (\Exception $exception){
