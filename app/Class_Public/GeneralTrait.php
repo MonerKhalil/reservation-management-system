@@ -53,7 +53,7 @@ trait GeneralTrait
     public function RefundToUser($facility){
         DB::beginTransaction();
         try {
-            echo "sakmaskmaksamks\n";
+//            echo "sakmaskmaksamks\n";
             $owner = User::where("id",$facility->id_user)->first();
             $bookings = bookings::where("id_facility",$facility->id)->where("start_date",">",Carbon::now())->get()->toArray();
             $header = "Delete facility ".$facility->name;
@@ -64,8 +64,6 @@ trait GeneralTrait
                 $user->increment("amount",$booking["cost"]);
                 $user->notify(new UserNotification($header,"Delete facility", $body,Carbon::now()));
             }
-            $body = "Sorry Your facility has been deleted beacuase the number of reports exceeded 3";
-            $owner->notify(new UserNotification($header,"Delete facility",$body,Carbon::now()));
             DB::commit();
             return 1;
         }catch (\Exception $exception){

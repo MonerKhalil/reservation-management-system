@@ -20,5 +20,6 @@ Route::controller(UsersController::class)->prefix("admin/dashboard/user")->group
 
 Route::controller(FacilitiesController::class)->prefix("admin/dashboard")->group(function (){
     Route::get("data","AllData");
+    Route::get("facilities/owner","ShowFacilitiesOwner");
     Route::delete("facility/delete","DeleteFacility");
 });

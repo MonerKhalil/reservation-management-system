@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Models\bookings;
 use App\Models\facilities;
 use App\Models\User;
+use App\Notifications\UserNotification;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -281,17 +282,20 @@ class UsersController extends Controller
                     $path = $user->profile->path_photo??null;
                 }
                 if($user->rule==="1"){
-                    echo "dkmdskmsdkmsdk\n";
+//                    echo "dkmdskmsdkmsdk\n";
                     $facilities = facilities::where("id_user",$user->id)->select("id")->get()->toArray();
-                    echo count($facilities)."\n";
+//                    echo count($facilities)."\n";
                     foreach ($facilities as $item){
-                        echo "sdkmdsk\n";
+//                        echo "sdkmdsk\n";
                         $facility = facilities::where("id",$item["id"])->first();
                         $Temp = $this->RefundToUser($facility);
                         if($Temp!==1){
                             DB::rollBack();
                             Throw new \Exception($Temp);
                         }
+                        $header = "Delete facility ".$facility->name;
+                        $body = "Sorry Your facility has been deleted beacuase the number of reports exceeded 3";
+                        $user->notify(new UserNotification($header,"Delete facility",$body,Carbon::now()));
                     }
                 }
                 $user->tokens()->delete();
@@ -318,6 +322,9 @@ class UsersController extends Controller
         }
     }
 
+    /**
+     * @throws \Throwable
+     */
     public function UpdateUser(Request $request): \Illuminate\Http\JsonResponse
     {
         DB::beginTransaction();
@@ -405,5 +412,4 @@ class UsersController extends Controller
             ],401);
         }
     }
-
 }

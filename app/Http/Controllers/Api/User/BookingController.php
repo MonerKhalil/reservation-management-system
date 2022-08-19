@@ -21,7 +21,7 @@ class BookingController extends Controller
     public function __construct()
     {
         $this->middleware(["auth:userapi","multi.auth:0"])->except(["GetInfoBooking","CheckBooking","DatesNotAvailable"]);
-        $this->middleware(["auth:userapi","multi.auth:0|1"])->only(["DatesNotAvailable"]);
+        $this->middleware(["auth:userapi","multi.auth:0|1|2"])->only(["DatesNotAvailable"]);
         $this->middleware(["auth:userapi"])->only("GetInfoBooking");
     }
 
@@ -65,11 +65,13 @@ class BookingController extends Controller
                     "Error" => $validate->errors()
                 ], 401);
             }
-            $facility = facilities::all()
-                ->where("id",$request->id_facility)->first()
-                ->bookings()->select(["id as id_booking","start_date","end_date"])
-                ->paginate($this->NumberOfValues($request));
-            return $this->Paginate("bookings",$facility);
+            $date = facilities::where("id",$request->id_facility)
+            ->first()->bookings()
+            ->select(["bookings.start_date","bookings.end_date"])
+            ->get()->toArray();
+            return \response()->json([
+                "dateNotAvailable" => $date
+            ]);
         }catch (\Exception $exception){
             return \response()->json([
                 "Error" => $exception->getMessage()
@@ -148,6 +150,7 @@ class BookingController extends Controller
             ], 401);
         }
     }
+
     private function HelpFunUnBooking($user,$owner,$cost,$facility,$booking){
         $owner->decrement("amount",$cost);
         $user->increment("amount",$cost);
@@ -209,7 +212,7 @@ class BookingController extends Controller
                     ]);
                     $header = "booking facility ".$facility->name;
                     $body = "The facility has been booked by the user ".$user->name;
-                    $body_request = ["id_booking"=>$booking->id];
+                    $body_request = ["id_booking"=>$booking->id,"id_facility"=>$booking->id_facility];
                     $Data = new DataInNotifiy("/bookings/info",$body_request,"GET");
                     $owner->notify(new UserNotification($header,"Booking",$body,$booking->created_at,$Data
                     ));

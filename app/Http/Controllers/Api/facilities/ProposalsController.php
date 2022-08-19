@@ -28,6 +28,7 @@ class ProposalsController extends Controller
                 ->get();
         }
     }
+    
     public function Top5Rate(Request $request): \Illuminate\Http\JsonResponse
     {
         try {
@@ -66,7 +67,7 @@ class ProposalsController extends Controller
         try {
         $Facilities = DB::table("bookings")
             ->selectRaw('COUNT(bookings.id_facility) as NumBooking,facilities.*')
-            ->leftJoin('facilities','facilities.id','=','bookings.id_facility')
+            ->Join('facilities','facilities.id','=','bookings.id_facility')
             ->groupBy(["bookings.id_facility"])
             ->orderByDesc("NumBooking")
             ->take(10)

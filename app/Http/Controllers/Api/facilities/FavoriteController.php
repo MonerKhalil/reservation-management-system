@@ -20,14 +20,14 @@ class FavoriteController extends Controller
     {
         $this->middleware(["auth:userapi","multi.auth:0"]);
     }
-    public function index()
+    public function ShowFavorite()
     {
-        $favorite=\auth()->user()->favorite_facilities;
+        $favorite=\auth()->user()->favorite_facilities()->with("photos")->get();
         return response([
-            "Data"=> FacilityResource::collection($favorite)
+            "facilities"=> $favorite
         ]);
     }
-    public function store(Request $request )
+    public function AddOrRemoveFavorite(Request $request): \Illuminate\Http\JsonResponse
     {
         $validator = Validator::make($request->all(),[
             'id_facility'=>['required',Rule::exists("facilities","id")],
@@ -35,39 +35,25 @@ class FavoriteController extends Controller
         if ($validator->fails()) {
             return response()->json([$validator->errors()]);
         }
-        $favorite=favorites::where([
-            'id_facility'=> $request->id_facility,
-            'id_user'=>\Auth::id()
+        $favorite = favorites::where([
+            'id_user'=>\auth()->user()->id,
+            'id_facility'=> $request->id_facility
         ])->first();
-
         if(!is_null($favorite)){
             $favorite->delete();
             return response()->json([
-                "message"=>"delete  favorite"
+                "message"=>"delete favorite"
             ]);
         }
         else
         {
             favorites::create([
-                'id_user'=>\Auth::id(),
+                'id_user'=>\auth()->user()->id,
                 'id_facility'=>$request->id_facility
             ]);
-
             return response()->json([
                 "message"=>"add to favorite"
             ]);
-
         }
-    }
-    public function show($id)
-    {
-        $favorite=Auth::user()->favorite_facilities()->get();
-        if ( is_null($favorite) ) {
-            return response()->json(['message'=> 'favorit not found']);
-        }
-        return  response()->json([
-            'message'=> 'favorite  exist',
-            'Date'=>$favorite
-        ]);
     }
 }

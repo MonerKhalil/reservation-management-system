@@ -176,7 +176,7 @@ class ReportController extends Controller
     {
         DB::beginTransaction();
         try {
-            $count = reports::where("id_facility",$facility->id)->count("id");
+            $count = reports::where("id_facility",$facility->id)->select(["id_facility","id_user"])->distinct()->count(["id_facility","id_user"]);
             if ($count >= 3){
                 $photos = $facility->photos;
                 $Temp = $this->RefundToUser($facility);

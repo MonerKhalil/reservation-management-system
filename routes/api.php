@@ -5,13 +5,6 @@ use Illuminate\Support\Facades\Broadcast;
 //Broadcast::routes(['prefix' => 'api','middleware' => ['auth:userapi']]);
 Broadcast::routes(['prefix' => 'api','middleware' => ["api",'auth:userapi']]);
 
-
-//TEST
-Route::match(["get", "post", "delete"],
-    "test",[\App\Http\Controllers\Api\Admin\UsersController::class,"CountUserOwnerFacInLastNMonth"]);
-//
-
-
 ############### Start Admin ######################
 
 require __DIR__ . "\\Route.Private.Project\\"."Admin\\"."admin.php";
@@ -20,11 +13,12 @@ require __DIR__ . "\\Route.Private.Project\\"."Admin\\"."report.php";
 
 ############### End Admin ######################
 
+
 ############### Start Users ######################
 
 require __DIR__ . "\\Route.Private.Project\\"."User\\"."authuser.php";
 
-require __DIR__ . "\\Route.Private.Project\\"."User\\"."user.php";
+require __DIR__ . "\\Route.Private.Project\\"."User\\"."profile.php";
 
 require __DIR__ . "\\Route.Private.Project\\"."User\\"."status.php";
 

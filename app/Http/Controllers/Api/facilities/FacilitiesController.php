@@ -12,54 +12,50 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use PHPUnit\Util\Exception;
 
 class FacilitiesController extends Controller{
     use GeneralTrait;
 
     public function __construct()
     {
-        //owner=>1
-        //user=>0
-        //admine=>2
-        $this->middleware(["auth:userapi","multi.auth:1|2"])->only(["deleteOneImage","addListImage",
-            "delete","store","update","index","deleteAllImage","status"]);
-        $this->middleware(["auth:userapi"])->only(["show","indexAll"]);
+        $this->middleware(["auth:userapi","multi.auth:1"])->only(["ShowFacilities","AddFacility"
+        ,"UpdateFacility","AddListImage","DeleteAllImage","DeleteOneImage"]);
+        $this->middleware(["auth:userapi","multi.auth:1|2"])->only("DeleteFacility");
     }
-    public  function  indexAll(){
-        $facility=facilities::with('photos')->get();
-        return response([
-            'Data'=>$facility
-        ]);
-    }
-    public  function  index(){
+
+    public function ShowFacilities(){
         try{
-            //  $facility=facilities::with('photos')->get();
-            // $facility=$facility->where('user_id',Auth::id());
-            $facility=Auth::user()->user_facilities()->with('photos')->get();
+            $facilities= auth()->user()->user_facilities()->with('photos')->get();
             return response([
-                'Data'=>$facility
+                'facilities'=>$facilities
             ]);
         }catch (\Exception $exception){
             return \response()->json([
                 "Error" => $exception->getMessage()
             ],401);
         }
-
     }
-    public  function  show($id){
-        try{
-            $facility=Auth::user()->user_facilities()->with("photos")->where("id",$id)->first();
-        if($facility!=null)
-        {
-            return response([
-                'Data'=>$facility
-            ]);
-        }else{
 
-            return response([
-                'Data'=>'no id facility'
+    public function ShowAnyFacility(Request $request){
+        try{
+            $validate = Validator::make($request->all(), [
+                "id_facility" => ["required", Rule::exists("facilities", "id"), "numeric"],
             ]);
-        }
+            if ($validate->fails()) {
+                return \response()->json([
+                    "Error" => $validate->errors()
+                ], 401);
+            }
+            $facility = facilities::with("photos")->where(["id"=>$request->id_facility])->first();
+            if(!is_null($facility))
+            {
+                return response([
+                    'facility'=>$facility
+                ]);
+            }else{
+                Throw new \Exception("the facility is not Exists");
+            }
         }catch (\Exception $exception){
             return \response()->json([
                 "Error" => $exception->getMessage(),
@@ -67,38 +63,33 @@ class FacilitiesController extends Controller{
             ],401);
         }
     }
-    public  function  delete($id)
+
+    /**
+     * @throws \Throwable
+     */
+    public function DeleteFacility(Request $request)
     {
         DB::beginTransaction();
         try{
-            $user = auth()->user()->rule;
-            if($user==="2"){
-                $facility = facilities::where(["id"=>$id])->first();
-                if($facility!=null)
-                {
-                    $Temp = $this->RefundToUser($facility);
-                    if($Temp!==1){
-                        Throw new \Exception($Temp);
-                    }
-                    $id_photo= $facility->photos;
-                    $facility->delete();
-                    foreach ($id_photo as $path)
-                    {
-                        unlink($path->path_photo);
-                    }
-                    DB::commit();
-                    return response(['message'=>'facility deleted successfully']);
-                }else{
-                    DB::rollback();
-                    return response(['message'=>'facility not found']);
-                }
-
-            }else{
-            $facility= Auth::user()->user_facilities()->where("id",$id)->first();
+            $validator=Validator::make($request->all(),[
+                "id"=>["required",Rule::exists("facilities","id")],
+            ]);
+            if($validator->fails()){
+                return response()->json([
+                    "error"=>$validator->errors()
+                ]);
+            }
+            $user = auth()->user();
+            if($user->rule==="2"){
+                $facility = facilities::where(["id"=>$request->id])->first();
+            }
+            else{
+                $facility = $user->user_facilities()->where("id",$request->id)->first();
+            }
             if($facility!=null)
             {
                 $this->RefundToUser($facility);
-                $id_photo= $facility->photos;
+                $id_photo = $facility->photos;
                 $facility->delete();
                 foreach ($id_photo as $path)
                 {
@@ -107,103 +98,61 @@ class FacilitiesController extends Controller{
                 DB::commit();
                 return response(['message'=>'facility deleted successfully']);
             }else{
-                DB::rollback();
-                return response(['message'=>'facility not found']);
-            }
+                Throw new Exception("facility not Exists -_-");
             }
         }catch  (\Exception $exception){
             DB::rollback();
             return \response()->json([
                 "Error" => $exception->getMessage()
             ],401);
-        } catch (\Throwable $e) {
         }
     }
-    public function   store(Request  $request){
 
-        $validator=Validator::make($request->all(),[
-            "name"=>["required","string"],
-            "location"=>["required","string"],
-            "description"=>["required","string"],
-            "photo_list"=>["required","array"],
-            "type"=>["required",Rule::in(["hostel","chalet","farmer"])],
-
-            "cost"=>["required","numeric"],
-            "num_guest"=>["required","numeric"],
-            "num_room"=>["required","numeric"],
-
-            "wifi"=>["required","string"],
-            "coffee_machine"=>["required","string"],
-            "air_condition"=>["required","string"],
-            "tv"=>["required","string"],
-            "fridge"=>["required","string"],
-        ]);
-        if($validator->fails())
-        {
-            return response()->json([
-                "error"=>$validator->errors()
-            ] );
-        }
-        if(!$request->hasFile('photo_list')) {
-            return response()->json(['upload_file_not_found'], 400);
-        }
+    /**
+     * @throws \Throwable
+     */
+    public function AddFacility(Request $request): \Illuminate\Http\JsonResponse
+    {
         DB::beginTransaction();
         try {
-            $facility =new facilities();
-
-            if($request->air_condition=='true' || $request->coffee_machine==1) {
-                $facility->air_condition = true;
-            }else {
-                $facility->air_condition=false;
+            $validator=Validator::make($request->all(),[
+                "name"=>["required","string"],
+                "location"=>["required","string"],
+                "description"=>["required","string"],
+                "photo_list"=>["required","mimes:jpeg,png,jpg","array"],
+                "type"=>["required",Rule::in(["hostel","chalet","farmer"])],
+                "cost"=>["required","numeric"],
+                "num_guest"=>["required","numeric"],
+                "num_room"=>["required","numeric"],
+                "wifi"=>["nullable","boolean"],
+                "coffee_machine"=>["nullable","boolean"],
+                "air_condition"=>["nullable","boolean"],
+                "tv"=>["nullable","boolean"],
+                "fridge"=>["nullable","boolean"],
+            ]);
+            if($validator->fails())
+            {
+                return response()->json([
+                    "Error"=>$validator->errors()
+                ] );
             }
-
-            if($request->coffee_machine=='true' || $request->coffee_machine==1) {
-                $facility->coffee_machine = true;
-            }else {
-                $facility->coffee_machine=false;
+            if(!$request->hasFile('photo_list')) {
+                return response()->json(['upload_file_not_found'], 400);
             }
-
-            if($request->wifi=='true' || $request->wifi==1) {
-                $facility->wifi=true;
-            }else{
-                $facility->wifi=false;
-            }
-
-            if ($request->fridge=='true' || $request->fridge==1) {
-                $facility->fridge=true;
-            }else{
-                $facility->fridge=false;
-            }
-            if ($request->tv=='true' || $request->tv==1) {
-                $facility->tv=true;
-            }else{
-                $facility->tv=false;
-            }
-            $facility ->name=$request->name;
-            $facility   ->location=$request->location;
-            $facility  ->description=$request->description;
-            $facility  ->type=$request->type;
-            $facility  ->cost= $request->cost;
-            $facility  ->num_guest=$request->num_guest;
-            $facility   ->num_room=$request->num_room;
-            $facility   ->id_user=Auth::id();
-            $facility->rate = 1;
-            $facility->save();
-
-//                $facility = \auth()->user()->user_facilities()->create([
-//                "name"=>$request->name,
-//                "location"=>$request->location,
-//                "description"=>$request->description,
-//                "type"=>$request->type,
-//                "cost"=> $request->cost,
-//                "num_guest"=>$request->num_guest,
-//                "num_room"=>$request->num_room,
-            //    "air_condition"=>$request->air_condition,
-            // "coffee_machine"=>$request->coffee_machine=='true'?true:false,
-//                "tv"=>$request->tv=='true'?true:false,
-//                "wifi"=>$request->wifi=='true'?true:false,
-//                "fridge"=>$request->fridge=='true'?true:false
-            //  ]);
+            $facility = \auth()->user()->user_facilities()->create([
+            "name"=>$request->name,
+            "location"=>$request->location,
+            "description"=>$request->description,
+            "type"=>$request->type,
+            "cost"=> $request->cost,
+            "num_guest"=>$request->num_guest,
+            "num_room"=>$request->num_room,
+            "air_condition" => $request->air_condition ?? false,
+            "coffee_machine" => $request->coffee_machin ?? false,
+            "tv" => $request->tv ?? false,
+            "wifi" => $request->wifi ?? false,
+            "fridge"=> $request->fridge ?? false
+            ]);
             $photoList=$request->file('photo_list');
             foreach ($photoList as $photo){
                 $newPhoto = time().$photo->getClientOriginalName();
@@ -214,62 +163,64 @@ class FacilitiesController extends Controller{
             }
             DB::commit();
             return response()->json([
-                "message" =>"Facility created successfully",
-                "data" => "facility"
+                "facility" => $facility
             ],201);
         }catch (\Exception $exception){
             DB::rollBack();
-
             return \response()->json([
                 "Error" => $exception->getMessage()
             ],401);
         }
     }
-    public function   update(Request  $request){
 
-        $validator=Validator::make($request->all(),[
-            "id"=>["required",Rule::exists("facilities","id")],
-            "name"=>["required","string"],
-            "location"=>["required","string"],
-            "description"=>["required","string"],
-            // "photo_list"=>["required","array"],
-            "type"=>["required",Rule::in(["hostel","chalet","farmer"])],
-            "cost"=>["required","numeric"],
-            "num_guest"=>["required","numeric"],
-            "num_room"=>["required","numeric"],
-            "wifi"=>["required","boolean"],
-            "coffee_machine"=>["required","boolean"],
-            "air_condition"=>["required","boolean"],
-            "tv"=>["required","boolean"],
-            "fridge"=>["required","boolean"],
-        ]);
-        if($validator->fails()){
-            return response()->json([
-                "error"=>$validator->errors()
-            ]);
-        }
-
+    /**
+     * @throws \Throwable
+     */
+    public function UpdateFacility(Request $request): \Illuminate\Http\JsonResponse
+    {
         DB::beginTransaction();
         try{
-            $facility = \auth()->user()->user_facilities()->where("id",$request->id)->first()->update([
-                "name"=>$request->name,
-                "location"=>$request->location,
-                "description"=>$request->description,
-                "type"=>$request->type,
-                "cost"=>$request->cost,
-                "num_guest"=>$request->num_guest,
-                "num_room"=>$request->num_room,
-                "air_condition"=>$request->air_condition,
-                "coffee_machine"=>$request->coffee_machine,
-                "tv"=>$request->tv,
-                "wifi"=>$request->wifi,
-                "fridge"=>$request->fridge
+            $validator=Validator::make($request->all(),[
+                "id"=>["required",Rule::exists("facilities","id")],
+                "name"=>["nullable","string"],
+                "location"=>["nullable","string"],
+                "description"=>["nullable","string"],
+                "type"=>["nullable",Rule::in(["hostel","chalet","farmer"])],
+                "cost"=>["nullable","numeric"],
+                "num_guest"=>["nullable","numeric"],
+                "num_room"=>["nullable","numeric"],
+                "wifi"=>["nullable","boolean"],
+                "coffee_machine"=>["nullable","boolean"],
+                "air_condition"=>["nullable","boolean"],
+                "tv"=>["nullable","boolean"],
+                "fridge"=>["nullable","boolean"],
+                "available"=>["nullable","boolean"]
+            ]);
+            if($validator->fails()){
+                return response()->json([
+                    "error"=>$validator->errors()
+                ]);
+            }
+            $facility = \auth()->user()->user_facilities()->where("id",$request->id)->first();
+            $temp = clone $facility;
+            $facility->update([
+                "name"=>$request->name ?? $temp->name,
+                "location"=>$request->location ?? $temp->location,
+                "description"=>$request->description ?? $temp->description,
+                "type"=>$request->type ?? $temp->type,
+                "cost"=>$request->cost ?? $temp->cost,
+                "num_guest"=>$request->num_guest ?? $temp->num_guest,
+                "num_room"=>$request->num_room??$temp->num_room,
+                "air_condition"=>$request->air_condition??$temp->air_condition,
+                "coffee_machine"=>$request->coffee_machine??$temp->coffee_machine,
+                "tv"=>$request->tv??$temp->tv,
+                "wifi"=>$request->wifi??$temp->wifi,
+                "fridge"=>$request->fridge??$temp->fridge,
+                "available"==$request->available??$temp->available
             ]);
             DB::commit();
             return response()->json([
-                "status" => true,
-                "message" => "facility data has been updated",
-                "data"=>$facility
+                "facility"=>$facility
             ]);
         }catch (\Exception $exception){
             DB::rollBack();
@@ -278,33 +229,15 @@ class FacilitiesController extends Controller{
             ],401);
         }
     }
-    public  function  deleteOneImage($id){
-        DB::beginTransaction();
-        try{
-            $_photo= photos_fac::find($id);
 
-            if($_photo!=null)
-            {
-                $teamp=clone $_photo;
-                $_photo->delete();
-                unlink($teamp->path_photo);
-                DB::commit();
-                return response(['message'=>'facility deleted successfully']);
-            }else{
-                return response(['message'=>'facility not found']);
-            }
-        }catch  (\Exception $exception){
-            DB::rollback();
-            return \response()->json([
-                "Error" => $exception->getMessage()
-            ],401);
-        }
-    }
-    public function  addListImage(Request $request )
+    /**
+     * @throws \Throwable
+     */
+    public function AddListImage(Request $request ): \Illuminate\Http\JsonResponse
     {
         $validator=Validator::make($request->all(), [
             "id" => "required",
-            "photo_list" => ["required", "array"],
+            "photo_list" => ["required","mimes:jpeg,png,jpg","array"],
         ]);
         if($validator->fails()){
             return response()->json([
@@ -314,8 +247,8 @@ class FacilitiesController extends Controller{
         if(!$request->hasFile('photo_list')) {
             return response()->json(['upload_file_not_found'], 401);
         }
+        DB::beginTransaction();
         try{
-            DB::beginTransaction();
             $facility = \auth()->user()->user_facilities()->where("id",$request->id)->first();
             if($facility!=null){
                 $photoList = $request->file('photo_list');
@@ -325,18 +258,14 @@ class FacilitiesController extends Controller{
                         "path_photo" => 'uploads/facility/' . $newPhoto,
                     ]);
                     $photo->move('uploads/facility', $newPhoto);
-                    DB::commit();
                 }
+                DB::commit();
                 return response()->json([
-                    "status" => true,
                     "message" => "image list add successfully"
                 ]);
             }
             else{
-                return response()->json([
-                    "status" => false,
-                    "message" => "facility nt found"
-                ]);
+                Throw new \Exception("Photo not Found -_-");
             }
         }catch (\Exception $exception){
             DB::rollBack();
@@ -347,40 +276,74 @@ class FacilitiesController extends Controller{
 
         }
     }
-    public function deleteAllImage($id){
-        $_photo= photos_fac::where("id_facility",$id);
-        if($_photo!==null){
-        $pa=clone  $_photo->get();
-        foreach ($pa as $path)
-        {
-            unlink($path->path_photo);
-        }
-        $_photo->delete();
+
+    /**
+     * @throws \Throwable
+     */
+    public function DeleteAllImage(Request $request){
+        DB::beginTransaction();
+        try{
+            $validator=Validator::make($request->all(),[
+                "id_facility"=>["required",Rule::exists("facilities","id")]
+            ]);
+            if($validator->fails()){
+                return response()->json([
+                    "error"=>$validator->errors()
+                ]);
+            }
+            $user = auth()->user();
+            $facility = $user->user_facilities()->where("id",$request->id)->first();
+            if (!is_null($facility)){
+                $id_photo = $facility->photos;
+                $facility->delete();
+                foreach ($id_photo as $path)
+                {
+                    unlink($path->path_photo);
+                }
+                DB::commit();
+                return response(['message'=>'Photos deleted successfully']);
+            }else{
+                Throw new \Exception("Facility not Found -_-");
+            }
+        }catch  (\Exception $exception){
+            DB::rollback();
+            return \response()->json([
+                "Error" => $exception->getMessage()
+            ],401);
         }
     }
 
-    public function status(Request  $request){
-        $validator = Validator::make($request->all(),[
-            'id_facility'=>['required',Rule::exists("facilities","id")],
-        ]);
-        if ($validator->fails()) {
-            return response()->json([$validator->errors()]);
-        }
-        $facility = \auth()->user()->user_facilities()->where("id",$request->id_facility)->first();
-        if(!is_null($facility) && $facility->available==true ){
-            $facility->update([
-                "available"=>0
+    /**
+     * @throws \Throwable
+     */
+    public function DeleteOneImage(Request $request){
+        DB::beginTransaction();
+        try{
+            $validator=Validator::make($request->all(),[
+                "id_photo"=>["required",Rule::exists("photos_facility","id")],
+                "id_facility"=>["required",Rule::exists("facilities","id")]
             ]);
-        } else {
-            if (!is_null($facility) && $facility->available == false) {
-                $facility->update([
-                    "available"=>1
+            if($validator->fails()){
+                return response()->json([
+                    "error"=>$validator->errors()
                 ]);
             }
+            $_photo = photos_fac::where("id_facility",$request->id_facility)->where("id",$request->id_photo)->first();
+            if($_photo!=null)
+            {
+                $temp = clone $_photo;
+                $_photo->delete();
+                unlink($temp->path_photo);
+                DB::commit();
+                return response(['message'=>'Photo deleted successfully']);
+            }else{
+                Throw new \Exception("Photo not Found -_-");
+            }
+        }catch  (\Exception $exception){
+            DB::rollback();
+            return \response()->json([
+                "Error" => $exception->getMessage()
+            ],401);
         }
-        return  response()->json([
-            'message'=> "toggle status success"  ,
-            'Date'=>$facility->available
-        ]);
     }
 }

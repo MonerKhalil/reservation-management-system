@@ -155,35 +155,43 @@ class FacilitiesController extends Controller
         }
     }
 
-    public function ShowFacilities(){
-
-    }
-
-    public function DeleteFacility(Request $request){
-        DB::beginTransaction();
+    public function ShowFacilitiesOwner(Request $request){
         try{
-            $validator=Validator::make($request->all(),[
-                "id_facility"=>['required',Rule::exists('facilities','id')],
+            $validate = Validator::make($request->all(), [
+                "id_owner" => ["required", Rule::exists("users", "id"), "numeric"],
             ]);
-            if($validator->fails()){
-                return response()->json([
-                    'Error'=>$validator->errors()
-                ]);
+            if ($validate->fails()) {
+                return \response()->json([
+                    "Error" => $validate->errors()
+                ], 401);
             }
-            $facility = facilities::where("id",$request->id_facility)->first();
-            $id_photo= $facility->photos;
-            $facility->delete();
-            DB::commit();
-            foreach ($id_photo as $path)
-            {
-                unlink($path->path_photo);
+            $owner = User::where("id",$request->id_owner)->first();
+            if($owner->rule==="1"){
+                $facilities = $owner->user_facilities()->with("photos")->get();
+                if(!is_null($facilities))
+                {
+                    return response([
+                        'facilities'=>$facilities
+                    ]);
+                }else{
+                    Throw new \Exception("the facility is not Exists");
+                }
+            }else{
+                Throw new \Exception("the user is not Owner");
             }
-            return response(['message'=>'facility deleted successfully']);
-        }catch  (\Exception $exception){
-            DB::rollback();
+        }catch (\Exception $exception){
             return \response()->json([
-                "Error" => $exception->getMessage()
+                "Error" => $exception->getMessage(),
+                "message" => 'no id'
             ],401);
         }
+    }
+
+    /**
+     * @throws \Throwable
+     */
+    public function DeleteFacility(Request $request){
+        $deleteFac = new \App\Http\Controllers\Api\facilities\FacilitiesController();
+        return $deleteFac->DeleteFacility($request);
     }
 }
