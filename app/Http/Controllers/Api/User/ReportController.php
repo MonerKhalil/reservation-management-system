@@ -22,7 +22,7 @@ class ReportController extends Controller
     use GeneralTrait;
     public function __construct()
     {
-        $this->middleware(["auth:userapi","multi.auth:2"])->except(["RefundToUser","AddReport"]);
+        $this->middleware(["auth:userapi","multi.auth:2"])->except(["RefundToUser","AddReport","infoReport"]);
         $this->middleware(["auth:userapi","multi.auth:0"])->only(["RefundToUser",'AddReport']);
     }
 
