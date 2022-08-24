@@ -131,6 +131,9 @@ class BookingController extends Controller
             if($user->id!==$booking->id_user){
                 throw new \Exception("Unauthenticated.");
             }
+            if($booking->start_date <= Carbon::now()){
+                throw new \Exception("You Cant UnBooking Facility.");
+            }
             $facility = facilities::where("id",$booking->id_facility)->first();
             $owner = User::where("id",$facility->id_user)->first();
             $time = round(abs(strtotime(Carbon::now()) - strtotime($booking->created_at))/86400);
